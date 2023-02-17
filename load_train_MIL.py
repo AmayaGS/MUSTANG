@@ -17,6 +17,7 @@ from PIL import ImageFile
 
 import pandas as pd
 import numpy as np
+import math
 
 from matplotlib import pyplot as plt
 
@@ -49,62 +50,8 @@ plt.ion()
 import gc 
 gc.enable()
 
-
 # %%
 
-torch.manual_seed(42)
-train_fraction = .7
-random_state = 2
-
-subset= False
-
-train_batch = 10
-test_batch = 1
-slide_batch = 1
-
-num_workers = 0
-shuffle = False
-drop_last = False
-
-train_patches = True
-train_slides = True
-testing_slides = True
-
-embedding_vector_size = 1024
-
-#subtyping = False # (True for 3 class problem) 
-
-# %%
-
-stain = 'CD138'
-
-# %%
-
-#file = r"C:\Users\Amaya\Documents\PhD\NECCESITY\Slides\qj_patch_labels.csv"
-file = r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/df_all_"+ stain + "_patches_labels.csv"
-df = pd.read_csv(file, header=0)
-
-# %%
-
-label = 'Pathotype binary'
-patient_id = 'Patient ID'
-n_classes=2
-
-if n_classes > 2:
-    subtyping=True
-else:
-    subtyping=False
-    
-# %%
-
-embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/embedding_" + stain + "_" + label + ".pth"
-classification_weights = r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/classification_" + stain + "_" + label + ".pth"
-
-# %%
-
-df = df.dropna(subset=[label])
-
-# %%
 
 train_transform = transforms.Compose([
         transforms.Resize((224, 224)),                            
@@ -127,25 +74,129 @@ test_transform = transforms.Compose([
 
 # %%
 
-df_train, df_test, train_sub, test_sub, file_ids, train_ids, test_ids = Loaders().df_loader(df, train_transform, test_transform, train_fraction, random_state, patient_id=patient_id, label=label, subset=subset)
+torch.manual_seed(42)
+train_fraction = .7
+random_state = 2
+
+subset= True
+
+train_batch = 10
+test_batch = 1
+slide_batch = 1
+
+num_workers = 0
+shuffle = False
+drop_last = False
+
+train_patches = True
+train_slides = True
+testing_slides = True
+
+embedding_vector_size = 1024
+
+#subtyping = False # (True for 3 class problem) 
 
 # %%
 
-# weights for minority oversampling 
-count = Counter(df_train.labels)
-class_count = np.array(list(count.values()))
-weight = 1 / class_count
-samples_weight = np.array([weight[t] for t in df_train.labels])
-samples_weight = torch.from_numpy(samples_weight)
-sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), len(samples_weight))
+label = 'Pathotype label'
+patient_id = 'Patient ID'
+n_classes=3
+
+if n_classes > 2:
+    subtyping=True
+else:
+    subtyping=False
 
 # %%
 
-train_loader, test_loader = Loaders().patches_dataloader(df_train, df_test, sampler, train_batch, test_batch, num_workers, shuffle, drop_last, Loaders.collate_fn)
+file = r"C:/Users/Amaya/Documents/PhD/Data/df_all_stains_patches_labels.csv"
+df = pd.read_csv(file, header=0)  
+df = df.dropna(subset=[label])
+
+stains = ["CD138", "CD68", "CD20", "HE"]
 
 # %%
 
-train_loaded_subsets, test_loaded_subsets = Loaders().slides_dataloader(train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, label=label, patient_id=patient_id)      
+file_ids, train_ids, test_ids = Loaders().train_test_ids(df, train_fraction, random_state, patient_id, label, subset)
+
+# %%
+
+stain_patches_DataLoaders_TRAIN = {}
+stain_patches_DataLoaders_TEST = {}
+stain_patient_DataLoaders_TRAIN = {}
+stain_patient_DataLoaders_TEST = {}
+
+for stain in stains:
+    
+    new_key = f'{stain}'
+    df_sub = df[df['Stain'] == stain]
+    df_train, df_test, train_sub, test_sub = Loaders().df_loader(df_sub, train_transform, test_transform, train_ids, test_ids, patient_id, label, subset=False)
+    # weights for minority oversampling 
+    count = Counter(df_train.labels)
+    class_count = np.array(list(count.values()))
+    weight = 1 / class_count
+    samples_weight = np.array([weight[t] for t in df_train.labels])
+    samples_weight = torch.from_numpy(samples_weight)
+    sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), len(samples_weight))
+    train_loader, test_loader = Loaders().patches_dataloader(df_train, df_test, sampler, train_batch, test_batch, num_workers, shuffle, drop_last, Loaders.collate_fn)
+    train_loaded_subsets, test_loaded_subsets = Loaders().slides_dataloader(train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, label=label, patient_id=patient_id) 
+       
+    stain_patches_DataLoaders_TRAIN[new_key] = train_loader
+    stain_patches_DataLoaders_TEST[new_key] = test_loader
+    stain_patient_DataLoaders_TRAIN[new_key] = train_loaded_subsets
+    stain_patient_DataLoaders_TEST[new_key] = test_loaded_subsets
+    
+    for outer_key, inner_values in stain_patches_DataLoaders_TRAIN.items():
+        subset = {}
+        subset[outer_key] = inner_values
+        if outer_key == 'CD138':
+            CD138_patches_TRAIN = subset.copy()
+        if outer_key == 'CD68':
+            CD68_patches_TRAIN = subset.copy()
+        if outer_key == 'CD20':
+            CD20_patches_TRAIN = subset.copy()
+        if outer_key == 'HE':
+            HE_patches_TRAIN = subset.copy()
+            
+    for outer_key, inner_values in stain_patches_DataLoaders_TEST.items():
+        subset = {}
+        subset[outer_key] = inner_values
+        if outer_key == 'CD138':
+            CD138_patches_TEST = subset.copy()
+        if outer_key == 'CD68':
+            CD68_patches_TEST = subset.copy()
+        if outer_key == 'CD20':
+            CD20_patches_TEST = subset.copy()
+        if outer_key == 'HE':
+            HE_patches_TEST = subset.copy()
+
+    for outer_key, inner_values in stain_patient_DataLoaders_TRAIN.items():
+        subset = {}
+        for inner_key, value in inner_values.items():
+            subset[inner_key] = value
+        if outer_key == 'CD138':
+            CD138_patients_TRAIN = subset.copy()
+        if outer_key == 'CD68':
+            CD68_patients_TRAIN = subset.copy()
+        if outer_key == 'CD20':
+            CD20_patients_TRAIN = subset.copy()
+        if outer_key == 'HE':
+            HE_patients_TRAIN = subset.copy()
+            
+    for outer_key, inner_values in stain_patient_DataLoaders_TEST.items():
+        subset = {}
+        for inner_key, value in inner_values.items():
+            subset[inner_key] = value
+        if outer_key == 'CD138':
+            CD138_patients_TEST = subset.copy()
+        if outer_key == 'CD68':
+            CD68_patients_TEST = subset.copy()
+        if outer_key == 'CD20':
+            CD20_patients_TEST = subset.copy()
+        if outer_key == 'HE':
+            HE_patients_TEST = subset.copy()
+    
+
 
 # %%
 
@@ -173,16 +224,16 @@ if train_patches:
 
 # %%
 
-if train_patches:
+# if train_patches:
     
-    model = train_embedding(embedding_net, train_loader, test_loader, criterion, optimizer, num_epochs=1)
-    torch.save(model.state_dict(), embedding_weights)
+#     model = train_embedding(embedding_net, train_loader, test_loader, criterion, optimizer, num_epochs=1)
+#     torch.save(model.state_dict(), embedding_weights)
 
 # %%
 
 if train_slides:
     
-    embedding_net = VGG_embedding(embedding_weights, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    #embedding_net = VGG_embedding(embedding_weights, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
     classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
     
     if use_gpu:
@@ -235,3 +286,4 @@ plot_confusion_matrix(conf_matrix, target_names, title='Confusion matrix', cmap=
 history = soft_vote(embedding_net, test_loaded_subsets)
 
 # %%
+
