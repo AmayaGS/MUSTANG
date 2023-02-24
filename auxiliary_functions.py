@@ -18,6 +18,7 @@ class histoDataset(Dataset):
         self.transform = transform 
         self.labels = df[label].astype(int).tolist()
         self.filepaths = df['Location'].tolist()
+        self.stain = df['Stain'].tolist()
 
     def __len__(self):
         return len(self.labels)

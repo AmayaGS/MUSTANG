@@ -78,7 +78,7 @@ torch.manual_seed(42)
 train_fraction = .7
 random_state = 2
 
-subset= True
+subset= False
 
 train_batch = 10
 test_batch = 1
@@ -88,17 +88,18 @@ num_workers = 0
 shuffle = False
 drop_last = False
 
-train_patches = True
+train_patches = False
 train_slides = True
 testing_slides = True
 
+finetuned = False 
 embedding_vector_size = 1024
 
 #subtyping = False # (True for 3 class problem) 
 
 # %%
 
-label = 'Pathotype label'
+label = 'Pathotype'
 patient_id = 'Patient ID'
 n_classes=3
 
@@ -114,6 +115,11 @@ df = pd.read_csv(file, header=0)
 df = df.dropna(subset=[label])
 
 stains = ["CD138", "CD68", "CD20", "HE"]
+
+# %%
+
+embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding.pth"
+classification_weights = r"C:/Users/Amaya/Documents/PhD/Data/classification.pth"
 
 # %%
 
@@ -224,20 +230,37 @@ if train_patches:
 
 # %%
 
-# if train_patches:
+if train_patches:
     
-#     model = train_embedding(embedding_net, train_loader, test_loader, criterion, optimizer, num_epochs=1)
-#     torch.save(model.state_dict(), embedding_weights)
+    patches_stain_train = [CD138_patches_TRAIN, CD68_patches_TRAIN, CD20_patches_TRAIN, HE_patches_TRAIN]
+    patches_stain_test = [CD138_patches_TEST, CD68_patches_TEST, CD20_patches_TEST, HE_patches_TEST]
+
+    for train_stain, test_stain in zip(patches_stain_train, patches_stain_test):
+        key, _ = list(train_stain.items())[0]
+        embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + key + ".pth"
+        model = train_embedding(embedding_net, train_stain, test_stain, criterion, optimizer, num_epochs=1)
+        torch.save(model.state_dict(), embedding_weights)
 
 # %%
 
 if train_slides:
-    
-    #embedding_net = VGG_embedding(embedding_weights, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+
+    embedding_weights_CD138 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD138' + ".pth"
+    embedding_net_CD138 = VGG_embedding(embedding_weights_CD138, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    #CD68
+    embedding_weights_CD68 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD68' + ".pth"
+    embedding_net_CD68 = VGG_embedding(embedding_weights_CD68, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    #CD20
+    embedding_weights_CD20 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD20' + ".pth"
+    embedding_net_CD20 = VGG_embedding(embedding_weights_CD20, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    #HE 
+    embedding_weights_HE = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'HE' + ".pth"
+    embedding_net_HE = VGG_embedding(embedding_weights_HE, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+   
+
     classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
     
     if use_gpu:
-        embedding_net.cuda()
         classification_net.cuda()
     
     loss_fn = nn.CrossEntropyLoss()
@@ -247,7 +270,7 @@ if train_slides:
     
 if train_slides:
     
-    embedding_model, classification_model = train_att_slides(embedding_net, classification_net, train_loaded_subsets, test_loaded_subsets, loss_fn, optimizer_ft, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
+    embedding_model, classification_model = train_att_slides(embedding_net_CD138, embedding_net_CD68, embedding_net_CD20, embedding_net_HE, classification_net, train_ids, test_ids,  CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
     torch.save(classification_model.state_dict(), classification_weights)
 
 # %%

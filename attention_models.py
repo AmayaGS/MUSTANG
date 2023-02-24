@@ -65,7 +65,7 @@ class VGG_embedding(nn.Module):
     Model definition
     """
 
-    def __init__(self, weights, embedding_vector_size=1024, n_classes=2):
+    def __init__(self, weights, finetuned=False, embedding_vector_size=1024, n_classes=2):
         
         super(VGG_embedding, self).__init__()
         
@@ -83,11 +83,17 @@ class VGG_embedding(nn.Module):
         features.extend([nn.Linear(embedding_vector_size, n_classes)]) # Add our layer with n outputs
         embedding_net.classifier = nn.Sequential(*features) # Replace the model classifier
         
-        embedding_net.load_state_dict(torch.load(weights), strict=True)
-        
-        features = list(embedding_net.classifier.children())[:-2] # Remove last layer
-        embedding_net.classifier = nn.Sequential(*features)
-        self.vgg_embedding = nn.Sequential(embedding_net)
+        if finetuned:
+            embedding_net.load_state_dict(torch.load(weights), strict=True)
+            
+            features = list(embedding_net.classifier.children())[:-2] # Remove last layer
+            embedding_net.classifier = nn.Sequential(*features)
+            self.vgg_embedding = nn.Sequential(embedding_net)
+            
+        else:
+            features = list(embedding_net.classifier.children())[:-2] # Remove last layer
+            embedding_net.classifier = nn.Sequential(*features)
+            self.vgg_embedding = nn.Sequential(embedding_net)
 
     def forward(self, x):
         

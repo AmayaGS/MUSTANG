@@ -8,7 +8,7 @@ Created on Fri Feb  3 13:13:57 2023
 
 import os
 import pandas as pd
-import math
+
 
 # %%
 
@@ -64,6 +64,7 @@ for stain in stains:
     #%%
     
     merged_data.to_csv(r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/df_all_" + stain + "_patches_labels.csv", sep=',', index=False)
+    merged_all_stains_df.to_csv(r"C:/Users/Amaya/Documents/PhD/Data/df_all_stains_patches_labels.csv", sep=',', index=False)
 
 # %%
 
