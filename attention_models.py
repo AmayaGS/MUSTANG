@@ -195,7 +195,7 @@ class GatedAttention(nn.Module):
         else:
             results_dict = {}
 
-        return logits, Y_prob, Y_hat, A, results_dict
+        return logits, Y_prob, Y_hat, A, results_dict, M
 
     # AUXILIARY METHODS
     def calculate_error(self, Y_hat, Y):

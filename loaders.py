@@ -61,22 +61,21 @@ class Loaders:
         
         # TRAIN dict
         train_subsets = {}
-        #file_indices = []
-        
         for i, file in enumerate(train_ids):
             new_key = f'{file}'
-            train_subset = histoDataset(train_sub[train_sub["Patient ID"] == file], train_transform, label=label)
+            train_subset = histoDataset(train_sub[train_sub["Patient ID"] == file], train_transform, label='Pathotype')
+#            if len(train_subset) != 0:
             train_subsets[new_key] = torch.utils.data.DataLoader(train_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False)
 
             
         # TEST dict
         test_subsets = {}
-        
         for i, file in enumerate(test_ids):
             new_key = f'{file}'
             test_subset = histoDataset(test_sub[test_sub["Patient ID"] == file], test_transform, label=label)
+#            if len(test_subset) != 0:
             test_subsets[new_key] = torch.utils.data.DataLoader(test_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False)
-            
+        
         return train_subsets, test_subsets
     
     def stain_dictionaries(train_loaded_subsets, test_loaded_subsets, stains):
