@@ -353,7 +353,7 @@ for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patie
 
 #%%
 
-net = GAT(1024, 32, 3)
+net = GAT(1024, 64, 3)
 loss_fn = nn.CrossEntropyLoss()
 optimizer_ft = optim.Adam(net.parameters(), lr=0.0001)
 
@@ -378,7 +378,7 @@ for i, patient in enumerate(zip(list_patient_multi_stain, all_labels)):
     
 # %%
 
-h, f = net(graph.x, graph.edge_index)
+h, f = net(graph)
 
 # %%
 
