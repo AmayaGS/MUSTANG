@@ -26,6 +26,9 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from torch_geometric.data import Data
+from sklearn.neighbors import kneighbors_graph
+
 from torchvision import transforms, models
 
 from loaders import Loaders
@@ -79,7 +82,7 @@ torch.manual_seed(42)
 train_fraction = .7
 random_state = 2
 
-subset= True
+subset= False
 
 train_batch = 10
 test_batch = 1
@@ -116,11 +119,6 @@ df = pd.read_csv(file, header=0)
 df = df.dropna(subset=[label])
 
 stains = ["CD138", "CD68", "CD20", "HE"]
-
-# %%
-
-embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding.pth"
-classification_weights = r"C:/Users/Amaya/Documents/PhD/Data/classification.pth"
 
 # %%
 
@@ -244,141 +242,65 @@ if train_patches:
 
 # %%
 
-if train_slides:
+# if train_slides:
 
-    # embedding_weights_CD138 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD138' + ".pth"
-    # embedding_net_CD138 = VGG_embedding(embedding_weights_CD138, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-    # #CD68
-    # embedding_weights_CD68 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD68' + ".pth"
-    # embedding_net_CD68 = VGG_embedding(embedding_weights_CD68, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-    # #CD20
-    # embedding_weights_CD20 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD20' + ".pth"
-    # embedding_net_CD20 = VGG_embedding(embedding_weights_CD20, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-    # #HE 
-    # embedding_weights_HE = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'HE' + ".pth"
-    # embedding_net_HE = VGG_embedding(embedding_weights_HE, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+#     # embedding_weights_CD138 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD138' + ".pth"
+#     # embedding_net_CD138 = VGG_embedding(embedding_weights_CD138, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+#     # #CD68
+#     # embedding_weights_CD68 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD68' + ".pth"
+#     # embedding_net_CD68 = VGG_embedding(embedding_weights_CD68, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+#     # #CD20
+#     # embedding_weights_CD20 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD20' + ".pth"
+#     # embedding_net_CD20 = VGG_embedding(embedding_weights_CD20, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+#     # #HE 
+#     # embedding_weights_HE = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'HE' + ".pth"
+#     # embedding_net_HE = VGG_embedding(embedding_weights_HE, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
     
     
-    # classification_net_CD138 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
-    # #CD68
-    # classification_net_CD68 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
-    # #CD20
-    # classification_net_CD20 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
-    # #HE 
-    # classification_net_HE = GatedAttention(n_classes=n_classes, subtyping=subtyping)
+#     # classification_net_CD138 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
+#     # #CD68
+#     # classification_net_CD68 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
+#     # #CD20
+#     # classification_net_CD20 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
+#     # #HE 
+#     # classification_net_HE = GatedAttention(n_classes=n_classes, subtyping=subtyping)
    
-    embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-    classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
+#     embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+#     classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
     
-    if use_gpu:
-        embedding_net.cuda()
-        classification_net.cuda()
+#     if use_gpu:
+#         embedding_net.cuda()
+#         classification_net.cuda()
     
-    loss_fn = nn.CrossEntropyLoss()
-    optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
-
-# %%
+#     loss_fn = nn.CrossEntropyLoss()
+#     optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
+    
+#%%
     
 if train_slides:
     
-    embedding_model, classification_model = train_att_slides(embedding_net, classification_net, CD138_patients_TRAIN, CD138_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
-    torch.save(classification_model.state_dict(), classification_weights)
-    
-# %%
-
-stain_loaders = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
-
-# %%
-    
-###################################
-# TRAIN
-
-embedding_net.eval()
-classification_net.train(True)
-
-list_patient_multi_stain = []
-labels = []
-all_labels = []
-
-for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
-    
-    print()
-    print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
-    print()
-    optimizer_ft.zero_grad()
-    
-    patient_embedding = []
-    labels = []
-    
-    for i, data in enumerate(loader):
+    patient_stain_train = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
+    patient_stain_test = [CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST]
+       
+    for train_stain, test_stain in zip(patient_stain_train, patient_stain_test):
         
-        print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
+        key = list(train_stain.values())[0].dataset.stain[0]
+        embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + key + ".pth"
+        classification_weights = r"C:/Users/Amaya/Documents/PhD/Data//classification_" + key + ".pth"
         
-        slide_embedding = []
+        embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+        classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
         
-        for patch in data:
-            
-            inputs, label = patch
-    
-            if use_gpu:
-                inputs, label = inputs.cuda(), label.cuda()
-            else:
-                inputs, label = inputs, label
-    
-            embedding = embedding_net(inputs)
-    
-            embedding = embedding.detach().to('cpu')
-            embedding = embedding.squeeze(0)
-            slide_embedding.append(embedding)
+        if use_gpu:
+            embedding_net.cuda()
+            classification_net.cuda()
         
-        try:
-            slide_embedding = torch.stack(slide_embedding)
-            #print(len(patient_embedding))
-            slide_embedding = slide_embedding.cuda()
-                    
-            logits, Y_prob, Y_hat, _, instance_dict, feature_vector = classification_net(slide_embedding, label=label, instance_eval=True)
-            patient_embedding.append(feature_vector[0].detach().to('cpu'))
-                    
-        except RuntimeError:
-            
-            patient_embedding.append(torch.zeros(embedding_vector_size))
-         
-        labels.append(label.type(torch.LongTensor))                 
-    
-    all_labels.append(labels)
-    patient_multi_stain = torch.stack(patient_embedding)
-    list_patient_multi_stain.append(patient_multi_stain)
+        loss_fn = nn.CrossEntropyLoss()
+        optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
 
-#logits, Y_prob, Y_hat, _, instance_dict, feature_vector = classification_net(patient_embedding, label=label, instance_eval=True)
-
-#%%
-
-net = GAT(1024, 64, 3)
-loss_fn = nn.CrossEntropyLoss()
-optimizer_ft = optim.Adam(net.parameters(), lr=0.0001)
-
-# %%
-
-graph_object = []
-
-for i, patient in enumerate(zip(list_patient_multi_stain, all_labels)):
-    
-    node_features = list_patient_multi_stain[i]
-    num_nodes = node_features.size(0)
-    labels = all_labels[i]
-    edge_index = torch.zeros((2, num_nodes * (num_nodes - 1)))
-    
-    for i in range(num_nodes):
-        for j in range(num_nodes):
-            if i != j:
-                edge_index[0, i * (num_nodes - 1) + j - (1 if j > i else 0)] = i
-                edge_index[1, i * (num_nodes - 1) + j - (1 if j > i else 0)] = j
-    graph = Data(x=node_features, edge_index=edge_index.type(torch.LongTensor), y=labels)
-    graph_object.append(graph)
-    
-# %%
-
-h, f = net(graph)
+        _, classification_model = train_att_slides(embedding_net, classification_net, train_stain, test_stain, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=1)
+        
+        torch.save(classification_model.state_dict(), classification_weights)
 
 # %%
 
@@ -386,23 +308,6 @@ from torch_geometric.utils import to_networkx
 G = to_networkx(graph, to_undirected=True)
 visualize_graph(G, color=graph.y)
 visualize_embedding(h, graph.y)
-
-# %%
-
-
-correct = 0
-    
-for graph in graph_object:
-    
-    out, h = net(graph.x, graph.edge_index)
-    pred = out.argmax(dim=1)
-    loss = loss_fn(out, torch.zeros(4).to(torch.long))  # Compute the loss solely based on the training nodes.
-    correct += int((pred == torch.stack(graph.y).to(torch.long).transpose(0, 1)).sum())
-    loss.backward()  # Derive gradients.
-    optimizer_ft.step()
-    
-acc =  correct / (len(graph_object) * 4 )
-
 
 
 # %%

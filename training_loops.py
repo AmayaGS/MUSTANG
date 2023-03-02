@@ -223,11 +223,15 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
                 embedding = embedding.squeeze(0)
                 patient_embedding.append(embedding)
 
-            patient_embedding = torch.stack(patient_embedding)
-            #print(len(patient_embedding))
-            patient_embedding = patient_embedding.cuda()
-                    
-            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding, label=label, instance_eval=True)
+            try:
+                
+                patient_embedding = torch.stack(patient_embedding)
+                patient_embedding = patient_embedding.cuda()
+                
+            except RuntimeError:
+                continue
+            
+            logits, Y_prob, Y_hat, _, instance_dict, feature_vector = classification_net(patient_embedding, label=label, instance_eval=True)
             acc_logger.log(Y_hat, label)
             loss = loss_fn(logits, label)
             loss_value = loss.item()
@@ -310,12 +314,17 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
                 embedding = embedding.detach().to('cpu')
                 embedding = embedding.squeeze(0)
                 patient_embedding.append(embedding)
-
-            patient_embedding = torch.stack(patient_embedding)
-            #print(len(patient_embedding))
-            patient_embedding = patient_embedding.cuda()
             
-            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding, label=label, instance_eval=True)
+            try:
+                
+                patient_embedding = torch.stack(patient_embedding)
+                patient_embedding = patient_embedding.cuda()
+                
+                
+            except RuntimeError:
+                continue
+            
+            logits, Y_prob, Y_hat, _, instance_dict, feature_vector = classification_net(patient_embedding, label=label, instance_eval=True)
             val_acc_logger.log(Y_hat, label)
             
             val_acc += torch.sum(Y_hat == label.data)
@@ -395,7 +404,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
     return embedding_net, classification_net
 
 
-def train_att_slides_finetuned(embedding_net_CD138, embedding_net_CD68, embedding_net_CD20, embedding_net_HE, classification_net, train_ids, test_ids, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer, embedding_vector_size, n_classes, bag_weight,  num_epochs=1):
+def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68, classification_net_CD20, classification_net_HE, embedding_net, graph_net, train_ids, test_ids, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, loss_2, optimizer, embedding_vector_size, n_classes, bag_weight,  num_epochs=1):
     
     since = time.time()
     #best_model_embedding_wts = copy.deepcopy(embedding_net.state_dict())
@@ -419,6 +428,10 @@ def train_att_slides_finetuned(embedding_net_CD138, embedding_net_CD68, embeddin
         
         train_acc = 0
         
+        patient_multi_stain_train = []
+        labels_train = []
+        all_labels_train = []
+        
         ###################################
         # TEST
         
@@ -438,51 +451,57 @@ def train_att_slides_finetuned(embedding_net_CD138, embedding_net_CD68, embeddin
         classification_net.train(True)
         
         for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
-
-            print("\rTraining batch {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
-        
-            optimizer.zero_grad()
-                   
+            
+            print()
+            print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
+            print()
+            optimizer_ft.zero_grad()
+            
             patient_embedding = []
-            #print(patient_embedding)
+            labels = []
+            
+            for i, data in enumerate(loader):
+                
+                print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
+                
+                slide_embedding = []
+                
+                for patch in data:
+                    
+                    inputs, label = patch
+            
+                    if use_gpu:
+                        inputs, label = inputs.cuda(), label.cuda()
+                    else:
+                        inputs, label = inputs, label
+            
+                    embedding = embedding_net(inputs)
+            
+                    embedding = embedding.detach().to('cpu')
+                    embedding = embedding.squeeze(0)
+                    slide_embedding.append(embedding)
     
-            for stain in loader:
+            try:
                 
-                try:
+                slide_embedding = torch.stack(slide_embedding)
+                slide_embedding = slide_embedding.cuda()
                 
-                    if stain.dataset.stain[0] == 'CD138':
-                        embedding_net = embedding_net_CD138 
-                    if stain.dataset.stain[0] == 'CD68':
-                        embedding_net = embedding_net_CD68
-                    if stain.dataset.stain[0] == 'CD20':
-                        embedding_net = embedding_net_CD20
-                    if stain.dataset.stain[0] == 'HE':
-                        embedding_net = embedding_net_HE   
-                        
-                    embedding_net.cuda()    
-                    embedding_net.eval()
+                if data.dataset.stain[0] == 'CD138':
+                    classification_net = classification_net_CD138 
+                if data.dataset.stain[0] == 'CD68':
+                    classification_net = classification_net_CD68
+                if data.dataset.stain[0] == 'CD20':
+                    classification_net = classification_net_CD20
+                if data.dataset.stain[0] == 'HE':
+                    classification_net = classification_net_HE   
 
-                    for patch in stain:
+                logits, Y_prob, Y_hat, _, instance_dict, feature_vector = classification_net(slide_embedding, label=label, instance_eval=True)
+                patient_embedding.append(feature_vector[0].detach().to('cpu'))
                         
-                        inputs, label = patch
+            except RuntimeError: # some DataLoaders will be empty, as the slide is absent. In theses cases, we use an tensor of zeros to replace the slide. 
+                
+                patient_embedding.append(torch.zeros(embedding_vector_size))
             
-                        if use_gpu:
-                            inputs, label = inputs.cuda(), label.cuda()
-                        else:
-                            inputs, label = inputs, label
-            
-                        embedding = embedding_net(inputs)
-            
-                        embedding = embedding.detach().to('cpu')
-                        embedding = embedding.squeeze(0)
-                        patient_embedding.append(embedding)
-                                    
-                except IndexError:
-                        continue
-    
-            patient_embedding = torch.stack(patient_embedding)
-            #print(len(patient_embedding))
-            patient_embedding = patient_embedding.cuda()
             
             logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding, label=label, instance_eval=True)
             acc_logger.log(Y_hat, label)
