@@ -34,9 +34,10 @@ from torchvision import transforms, models
 from loaders import Loaders
 
 from training_loops import train_embedding, train_att_slides, test_slides, soft_vote
+from graph_train_loop import train_graph_slides
 
 from attention_models import VGG_embedding, GatedAttention
-from GAT import GAT
+from GAT import GAT, GAT_topK
 
 from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
 

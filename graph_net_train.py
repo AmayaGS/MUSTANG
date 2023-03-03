@@ -37,7 +37,7 @@ from loaders import Loaders
 from training_loops import train_embedding, train_att_slides, test_slides, soft_vote
 
 from attention_models import VGG_embedding, GatedAttention
-from GAT import GAT
+from GAT import GAT, GAT_topK
 
 from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
 
@@ -298,7 +298,7 @@ stain_loaders = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN,
 
 # %%
 
-graph_net = GAT(1024, 64, 3)
+graph_net = GAT_topK(1024)
 graph_net.cuda()
 
 # %%
@@ -523,9 +523,9 @@ plt.show()
 ###################################
 # TRAIN
 
-epochs = 10
+graph_net.cuda()
 embedding_net.eval()
-classification_net.eval()
+graph_net.train()
 
 train_patient_multi_stain = []
 train_labels = []
@@ -561,16 +561,16 @@ for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patie
             embedding = embedding.detach().to('cpu')
             embedding = embedding.squeeze(0)
             slide_embedding.append(embedding)
+
+        slide_embedding = torch.stack(slide_embedding)
+        #slide_embedding = slide_embedding.cuda()
         
-        try:
-        
-            slide_embedding = torch.stack(slide_embedding)
-            slide_embedding = slide_embedding.cuda()
+        knn_graph = kneighbors_graph(slide_embedding, 5, mode='connectivity', include_self=False)
+        edge_index = torch.tensor(knn_graph.nonzero(), dtype=torch.long)
+        data = Data(x=slide_embedding, edge_index=edge_index)
+        out = graph_net(data.cuda())
             
-            knn_graph = kneighbors_graph(slide_embedding.cpu(), 5, mode='connectivity', include_self=False)
-            edge_index = torch.tensor(knn_graph.nonzero(), dtype=torch.long)
-            data = Data(x=slide_embedding.cpu(), edge_index=edge_index)
-            out = graph_net(data)
+# %%          
                     
         except RuntimeError: # some DataLoaders will be empty, as the slide is absent. In theses cases, we use an tensor of zeros to replace the slide. 
             

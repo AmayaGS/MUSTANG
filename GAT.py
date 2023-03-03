@@ -10,6 +10,7 @@ import torch.nn.functional as F
 #from torch.nn import Linear, Dropout
 from torch_geometric.nn import GATv2Conv
 from torch_geometric.nn import global_mean_pool as gap, global_max_pool as gmp
+from torch_geometric.nn import TopKPooling
 from SAGPool import SAGPool
 
 
@@ -51,6 +52,73 @@ class GAT(torch.nn.Module):
         return x_out
     
 #%%
+
+
+class GAT_topK(torch.nn.Module):
+    
+    """Graph Attention Network for full slide graph"""
+    
+    def __init__(self, dim_in, heads=8, pooling_ratio=0.5):
+        
+        super().__init__()
+        
+        self.pooling_ratio = pooling_ratio
+        
+        self.gat1 = GATv2Conv(dim_in, 512, heads=heads)
+        self.gat2 = GATv2Conv(512*heads, 256, heads=4)
+        self.gat3 = GATv2Conv(256*4, 128, heads=2)
+        self.gat4 = GATv2Conv(128*2, 64, heads=1)
+                
+        self.topk1 = TopKPooling(4096, pooling_ratio)
+        self.topk2 = TopKPooling(256*4, pooling_ratio)
+        self.topk3 = TopKPooling(128*2, pooling_ratio)
+        self.topk4 = TopKPooling(64, pooling_ratio)
+        
+        self.lin1 = torch.nn.Linear(38, 19)
+        self.lin2 = torch.nn.Linear(19, 8)
+        self.lin3 = torch.nn.Linear(8, 3)
+
+    def forward(self, data):
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        x = self.gat1(x, edge_index)
+        x = F.selu(x)
+        x = F.dropout(x, p=0.4, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk1(x, edge_index, None, batch)
+        x1 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        x = self.gat2(x, edge_index)
+        x = F.selu(x)
+        x = F.dropout(x, p=0.4, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk2(x, edge_index, None, batch)
+        x2 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+
+        x = self.gat3(x, edge_index)
+        x = F.selu(x)
+        x = F.dropout(x, p=0.4, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk3(x, edge_index, None, batch)
+        x3 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        x = self.gat4(x, edge_index)
+        x = F.selu(x)
+        x = F.dropout(x, p=0.4, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk4(x, edge_index, None, batch)
+        x4 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        x = self.lin1(x)
+        x = F.selu(x)
+        x = self.lin2(x)
+        x = F.selu(x)
+        x = self.lin3(x)
+        x = F.selu(x)
+        x_out = F.log_softmax(x, dim=-1)
+
+        return x
+
+
+
+# %%
 
 # import torch
 # from torch_geometric.nn import GCNConv
