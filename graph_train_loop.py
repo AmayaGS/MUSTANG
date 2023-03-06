@@ -71,11 +71,7 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
         val_acc_logger = Accuracy_Logger(n_classes)
         val_inst_logger = Accuracy_Logger(n_classes)
         val_loss = 0.
-        val_error = 0.
-    
-        val_inst_loss = 0.
-        val_inst_count= 0
-        
+
         val_acc = 0
 
         ###################################
@@ -118,29 +114,33 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
             except RuntimeError:
                 continue
             
-            Y_prob, graph = graph_net(data.cuda())
+            logits, Y_prob = graph_net(data.cuda())
             Y_hat = Y_prob.argmax(dim=1)
             acc_logger.log(Y_hat, label)
-            loss = loss_fn(Y_hat, label)
-            total_loss = loss.item()
+            #label = torch.tensor(label, dtype=torch.float32)
+            loss = loss_fn(logits, label)
             
             train_acc += torch.sum(Y_hat == label.data)
             train_count += 1
         
             if (batch_idx) % 10 == 0:
-                print('- batch {}, loss: {:.4f}, '.format(batch_idx, total_loss) + 
+                print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
                     'label: {}, bag_size: {}'.format(label.item(), patient_embedding.size(0)))
             
             # backward pass
-            total_loss.backward()
+            loss.backward()
             # step
             optimizer.step()
             optimizer.zero_grad()
             
-        total_loss /= train_count
-        train_accuracy =  train_acc / train_count
+            del data, knn_graph, edge_index, patient_embedding, logits, Y_prob, Y_hat
+            gc.collect()
             
-        print('Epoch: {}, train_loss: {:.4f}, train_accuracy: {:.4f}'.format(epoch, train_loss, train_accuracy))
+        total_loss = loss.item() / train_count
+        train_accuracy =  train_acc / train_count
+        
+        print()
+        print('Epoch: {}, train_loss: {:.4f}, train_accuracy: {:.4f}'.format(epoch, total_loss, train_accuracy))
         for i in range(n_classes):
             acc, correct, count = acc_logger.get_summary(i)
             print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count))
@@ -190,28 +190,34 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
             except RuntimeError:
                 continue
             
-            Y_prob, graph = graph_net(data.cuda())
+            logits, Y_prob = graph_net(data.cuda())
             Y_hat = Y_prob.argmax(dim=1)
             val_acc_logger.log(Y_hat, label)
             
             val_acc += torch.sum(Y_hat == label.data)
             test_count += 1
             
-            loss = loss_fn(Y_hat, label)
+            loss = loss_fn(logits, label)
             val_loss += loss.item()
-
+            
+            #Y_prob = torch.exp(Y_prob)
             prob.append(Y_prob.detach().to('cpu').numpy())
             labels.append(label.item())
+            
+            del data, knn_graph, edge_index, patient_embedding, logits, Y_prob, Y_hat
+            gc.collect()
                    
         val_loss /= test_count
         val_accuracy = val_acc / test_count
                
         if n_classes == 2:
+            prob =  np.stack(prob, axis=1)[0]
             val_auc = roc_auc_score(labels, prob[:, 1])
             aucs = []
         else:
             aucs = []
             binary_labels = label_binarize(labels, classes=[i for i in range(n_classes)])
+            prob =  np.stack(prob, axis=1)[0]
             for class_idx in range(n_classes):
                 if class_idx in labels:
                     fpr, tpr, _ = roc_curve(binary_labels[:, class_idx], prob[:, class_idx])
@@ -224,7 +230,7 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
         clsf_report = pd.DataFrame(classification_report(labels, np.argmax(prob, axis=1), output_dict=True, zero_division=1)).transpose()
         conf_matrix = confusion_matrix(labels, np.argmax(prob, axis=1))
                     
-        print('\nVal Set, val_loss: {:.4f}, val_error: {:.4f}, AUC: {:.4f}, Accuracy: {:.4f}'.format(val_loss, val_error, val_auc, val_accuracy))
+        print('\nVal Set, val_loss: {:.4f}, AUC: {:.4f}, Accuracy: {:.4f}'.format(val_loss, val_auc, val_accuracy))
     
         for i in range(n_classes):
             acc, correct, count = val_acc_logger.get_summary(i)

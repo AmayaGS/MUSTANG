@@ -298,8 +298,7 @@ stain_loaders = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN,
 
 # %%
 
-graph_net = GAT_topK(1024)
-graph_net.cuda()
+
 
 # %%
     
@@ -523,7 +522,11 @@ plt.show()
 ###################################
 # TRAIN
 
+graph_net = GAT_topK(1024)
 graph_net.cuda()
+
+#%%
+
 embedding_net.eval()
 graph_net.train()
 

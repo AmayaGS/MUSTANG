@@ -23,6 +23,7 @@ from matplotlib import pyplot as plt
 
 import torch
 import torch.nn as nn
+
 import torch.optim as optim
 import torch.nn.functional as F
 
@@ -104,9 +105,9 @@ embedding_vector_size = 1024
 
 # %%
 
-label = 'Pathotype'
+label = 'Pathotype_binary'
 patient_id = 'Patient ID'
-n_classes=3
+n_classes=2
 
 if n_classes > 2:
     subtyping=True
@@ -115,7 +116,7 @@ else:
 
 # %%
 
-file = r"C:/Users/Amaya/Documents/PhD/Data/df_all_stains_patches_labels.csv"
+file = r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"
 df = pd.read_csv(file, header=0)  
 df = df.dropna(subset=[label])
 
@@ -136,7 +137,7 @@ for stain in stains:
     
     new_key = f'{stain}'
     df_sub = df[df['Stain'] == stain]
-    df_train, df_test, train_sub, test_sub = Loaders().df_loader(df_sub, train_transform, test_transform, train_ids, test_ids, patient_id, label, subset=False)
+    df_train, df_test, train_sub, test_sub = Loaders().df_loader(df_sub, train_transform, test_transform, train_ids, test_ids, patient_id, label, subset=subset)
     # weights for minority oversampling 
     count = Counter(df_train.labels)
     class_count = np.array(list(count.values()))
@@ -287,23 +288,23 @@ if train_slides:
         
         key = list(train_stain.values())[0].dataset.stain[0]
         embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + key + ".pth"
-        classification_weights = r"C:/Users/Amaya/Documents/PhD/Data//classification_" + key + ".pth"
+        classification_weights = r"C:/Users/Amaya/Documents/PhD/Data//graph_" + key + ".pth"
         
         embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-        classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
+        graph_net = GAT_topK(1024) 
         
         if use_gpu:
             embedding_net.cuda()
-            classification_net.cuda()
+            graph_net.cuda()
         
         loss_fn = nn.CrossEntropyLoss()
-        optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
+        optimizer_ft = optim.Adam(graph_net.parameters(), lr=0.0001)
 
-        _, classification_model = train_att_slides(embedding_net, classification_net, train_stain, test_stain, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=1)
+        _, graph_model = train_graph_slides(embedding_net, graph_net, train_stain, test_stain, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=10)
         
-        torch.save(classification_model.state_dict(), classification_weights)
+        torch.save(graph_model.state_dict(), classification_weights)
 
-# %%
+ # %%
 
 from torch_geometric.utils import to_networkx
 G = to_networkx(graph, to_undirected=True)

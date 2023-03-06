@@ -8,6 +8,7 @@ Created on Fri Feb  3 13:13:57 2023
 
 import os
 import pandas as pd
+import math
 
 
 # %%
@@ -19,11 +20,14 @@ for stain in stains:
 
     main_dir = r"C:/Users/Amaya/Documents/PhD/Data/QuPath " + stain + "/tiles"
     csv_file = r"C:\Users/Amaya/Documents/PhD/Data/" + stain + "/" + stain + "_ID_labels_relabeling.csv"
+    labels = r"C:\Users\Amaya\Documents\PhD\Data\patient_labels.csv"
     
     # %%
 
     folder_list = [f.path for f in os.scandir(main_dir)]
     df = pd.read_csv(csv_file, encoding='windows-1252')
+    df_name = df[df.columns[:5]]
+    df_labels = pd.read_csv(labels)
     
     # %%
     
@@ -46,25 +50,26 @@ for stain in stains:
         
     # %%
     
-    merged_data = pd.merge(patch_names_df, df, how='outer', on='Patient ID')
-    merged_data = merged_data.dropna(subset=["Patch_name"])
-    df_all_stains.append(merged_data)
+    merged_data = pd.merge(patch_names_df, df_name, how='outer', on='Patient ID')
+    merged_data_label = pd.merge(merged_data, df_labels, how='outer', on='Patient ID')
+    merged_data_label = merged_data_label.dropna(subset=["Patch_name"])
+    df_all_stains.append(merged_data_label)
     
     #%%
     
-    merged_all_stains_df = pd.concat(df_all_stains,  keys='Patient ID')
-    patient_labels = set(zip(merged_all_stains_df['Patient ID'], merged_all_stains_df['Pathotype']))
-    patient_labels_dict = {k: v for k, v in patient_labels if not math.isnan(v)}
+merged_all_stains_df = pd.concat(df_all_stains,  keys='Patient ID')
+patient_labels = set(zip(merged_all_stains_df['Patient ID'], merged_all_stains_df['Pathotype']))
+patient_labels_dict = {k: v for k, v in patient_labels if not math.isnan(v)}
 
-    # %%
-    
-    patient_labels_df = pd.DataFrame(patient_labels_dict, index=["Pathotype"]).transpose()
-    patient_labels_df.to_csv( r"C:/Users/Amaya/Documents/PhD/Data/patient_labels.csv")
-    
-    #%%
-    
-    merged_data.to_csv(r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/df_all_" + stain + "_patches_labels.csv", sep=',', index=False)
-    merged_all_stains_df.to_csv(r"C:/Users/Amaya/Documents/PhD/Data/df_all_stains_patches_labels.csv", sep=',', index=False)
+# %%
+
+# patient_labels_df = pd.DataFrame(patient_labels_dict, index=["Pathotype"]).transpose()
+# patient_labels_df.to_csv( r"C:/Users/Amaya/Documents/PhD/Data/patient_labels.csv")
+
+#%%
+
+merged_data.to_csv(r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/df_all_" + stain + "_patches_labels.csv", sep=',', index=False)
+merged_all_stains_df.to_csv(r"C:/Users/Amaya/Documents/PhD/Data/df_all_stains_patches_labels.csv", sep=',', index=False)
 
 # %%
 

@@ -57,13 +57,13 @@ class Loaders:
         return train_loader, test_loader
 
 
-    def slides_dataloader(self, train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, label='Binary disease', patient_id="Patient ID"):
+    def slides_dataloader(self, train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, label='Pathotype_binary', patient_id="Patient ID"):
         
         # TRAIN dict
         train_subsets = {}
         for i, file in enumerate(train_ids):
             new_key = f'{file}'
-            train_subset = histoDataset(train_sub[train_sub["Patient ID"] == file], train_transform, label='Pathotype')
+            train_subset = histoDataset(train_sub[train_sub["Patient ID"] == file], train_transform, label=label)
 #            if len(train_subset) != 0:
             train_subsets[new_key] = torch.utils.data.DataLoader(train_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False)
 
