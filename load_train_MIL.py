@@ -35,7 +35,7 @@ from torchvision import transforms, models
 from loaders import Loaders
 
 from training_loops import train_embedding, train_att_slides, test_slides, soft_vote
-from graph_train_loop import train_graph_slides
+from graph_train_loop import train_graph_slides, train_graph_multi_stain
 
 from attention_models import VGG_embedding, GatedAttention
 from GAT import GAT, GAT_topK
@@ -279,10 +279,15 @@ if train_patches:
     
 #%%
     
+# SINGLE STAIN
+
 if train_slides:
     
-    patient_stain_train = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
-    patient_stain_test = [CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST]
+    # patient_stain_train = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
+    # patient_stain_test = [CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST]
+    
+    patient_stain_train = [CD20_patients_TRAIN]
+    patient_stain_test = [CD20_patients_TEST]
        
     for train_stain, test_stain in zip(patient_stain_train, patient_stain_test):
         
@@ -305,6 +310,29 @@ if train_slides:
         torch.save(graph_model.state_dict(), classification_weights)
 
  # %%
+
+# MULTI STAIN
+
+if train_slides:
+        
+    embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches.pth"
+    classification_weights = r"C:/Users/Amaya/Documents/PhD/Data//multi_graph_classification.pth"
+    
+    embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    graph_net = GAT_topK(1024) 
+    
+    if use_gpu:
+        embedding_net.cuda()
+        graph_net.cuda()
+    
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer_ft = optim.Adam(graph_net.parameters(), lr=0.0001)
+
+    _, graph_model = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=10)
+    
+    torch.save(graph_model.state_dict(), classification_weights)
+
+# %%
 
 from torch_geometric.utils import to_networkx
 G = to_networkx(graph, to_undirected=True)
