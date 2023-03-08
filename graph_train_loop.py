@@ -303,19 +303,17 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
         
         for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
 
-
             print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
-
             
             patient_embedding = []
             labels = []
            
             for i, data in enumerate(loader):
                 
-                stain = data.dataset.stain[0]
-                patient = data.dataset.filepaths[0].split("\\")[-1].split("_")[0]
+                # stain = data.dataset.stain[0]
+                # patient = data.dataset.filepaths[0].split("\\")[-1].split("_")[0]
                 
-                print("\rStain {}/{} - {} - {}".format(i, len(loader), stain, patient), end='', flush=True)
+                # print("\rStain {}/{} - {} - {}".format(i, len(loader), stain, patient), end='', flush=True)
 
                 slide_embedding = []
                 
@@ -351,7 +349,6 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             logits, Y_prob = graph_net(data.cuda())
             Y_hat = Y_prob.argmax(dim=1)
             acc_logger.log(Y_hat, label)
-            #label = torch.tensor(label, dtype=torch.float32)
             loss = loss_fn(logits, label)
             
             train_acc += torch.sum(Y_hat == label.data)
@@ -392,37 +389,50 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
         prob = []
         labels = []
 
-        for batch_idx, loader in enumerate(patients_TEST.values()):
+        for batch_idx, loader in enumerate(zip(CD138_patients_TEST.values(), CD68_patients_TEST.values(), CD20_patients_TEST.values(), HE_patients_TEST.values())):
             
-            print("\rValidation batch {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
-                   
+            print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
+
             patient_embedding = []
-            #print(patient_embedding)
-    
-            for data in loader:
-        
-                inputs, label = data
-    
-                if use_gpu:
-                    inputs, label = inputs.cuda(), label.cuda()
-                else:
-                    inputs, label = inputs, label
-    
-                embedding = embedding_net(inputs)
-    
-                embedding = embedding.detach().to('cpu')
-                embedding = embedding.squeeze(0)
-                patient_embedding.append(embedding)
+            labels = []
+            
+            for i, data in enumerate(loader):
+                
+                # stain = data.dataset.stain[0]
+                # patient = data.dataset.filepaths[0].split("\\")[-1].split("_")[0]
+                
+                # print("\rStain {}/{} - {} - {}".format(i, len(loader), stain, patient), end='', flush=True)
+            
+                slide_embedding = []
+                
+                for patch in data:
+                    
+                    inputs, label = patch
+            
+                    if use_gpu:
+                        inputs, label = inputs.cuda(), label.cuda()
+                    else:
+                        inputs, label = inputs, label
+            
+                    embedding = embedding_net(inputs)
+            
+                    embedding = embedding.detach().to('cpu')
+                    embedding = embedding.squeeze(0)
+                    slide_embedding.append(embedding)
+                
+                slide_embedding = torch.stack(slide_embedding)
+                patient_embedding.append(slide_embedding)
             
             try:
                 
-                patient_embedding = torch.stack(patient_embedding)
-                knn_graph = kneighbors_graph(patient_embedding, 5, mode='connectivity', include_self=False)
-                edge_index = torch.tensor(knn_graph.nonzero(), dtype=torch.long)
-                data = Data(x=patient_embedding, edge_index=edge_index)
-             
+                patient_embedding = torch.cat(patient_embedding)
+                
             except RuntimeError:
                 continue
+            
+            knn_graph = kneighbors_graph(patient_embedding, 5, mode='connectivity', include_self=False)
+            edge_index = torch.tensor(knn_graph.nonzero(), dtype=torch.long)
+            data = Data(x=patient_embedding, edge_index=edge_index)
             
             logits, Y_prob = graph_net(data.cuda())
             Y_hat = Y_prob.argmax(dim=1)
@@ -438,7 +448,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             prob.append(Y_prob.detach().to('cpu').numpy())
             labels.append(label.item())
             
-            del data, knn_graph, edge_index, patient_embedding, logits, Y_prob, Y_hat
+            del data, knn_graph, edge_index, slide_embedding, patient_embedding, logits, Y_prob, Y_hat
             gc.collect()
                    
         val_loss /= test_count

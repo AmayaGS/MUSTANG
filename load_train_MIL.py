@@ -8,6 +8,7 @@ Created on Thu Nov 17 11:52:02 2022
 import os, os.path
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 import time
+import sys
 
 from collections import Counter
 from collections import defaultdict
@@ -34,7 +35,7 @@ from torchvision import transforms, models
 
 from loaders import Loaders
 
-from training_loops import train_embedding, train_att_slides, test_slides, soft_vote
+from training_loops import train_embedding, train_att_slides, train_att_multi_slide, test_slides, soft_vote
 from graph_train_loop import train_graph_slides, train_graph_multi_stain
 
 from attention_models import VGG_embedding, GatedAttention
@@ -244,41 +245,67 @@ if train_patches:
 
 # %%
 
-# if train_slides:
+# CLAM
+# SINGLE STAIN
 
-#     # embedding_weights_CD138 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD138' + ".pth"
-#     # embedding_net_CD138 = VGG_embedding(embedding_weights_CD138, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-#     # #CD68
-#     # embedding_weights_CD68 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD68' + ".pth"
-#     # embedding_net_CD68 = VGG_embedding(embedding_weights_CD68, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-#     # #CD20
-#     # embedding_weights_CD20 = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'CD20' + ".pth"
-#     # embedding_net_CD20 = VGG_embedding(embedding_weights_CD20, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-#     # #HE 
-#     # embedding_weights_HE = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + 'HE' + ".pth"
-#     # embedding_net_HE = VGG_embedding(embedding_weights_HE, finetuned=True, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+sys.stdout = open(r"C:\Users\Amaya\Documents\PhD\Data\CLAM_single_stain_results.txt", 'w')
+                
+if train_slides:
     
-    
-#     # classification_net_CD138 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
-#     # #CD68
-#     # classification_net_CD68 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
-#     # #CD20
-#     # classification_net_CD20 = GatedAttention(n_classes=n_classes, subtyping=subtyping)
-#     # #HE 
-#     # classification_net_HE = GatedAttention(n_classes=n_classes, subtyping=subtyping)
+    patient_stain_train = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
+    patient_stain_test = [CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST]
+       
+    for train_stain, test_stain in zip(patient_stain_train, patient_stain_test):
+        
+        key = list(train_stain.values())[0].dataset.stain[0]
+        embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches_" + key + ".pth"
+        classification_weights = r"C:/Users/Amaya/Documents/PhD/Data//CLAM_" + key + ".pth"
    
-#     embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-#     classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
-    
-#     if use_gpu:
-#         embedding_net.cuda()
-#         classification_net.cuda()
-    
-#     loss_fn = nn.CrossEntropyLoss()
-#     optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
+        embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+        classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
+        
+        if use_gpu:
+            embedding_net.cuda()
+            classification_net.cuda()
+        
+        loss_fn = nn.CrossEntropyLoss()
+        optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
+        
+        print(key)
+        
+        _, classification_model = train_att_slides(embedding_net, classification_net, train_stain, test_stain, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
+        torch.save(classification_model.state_dict(), classification_weights)
+        
+sys.stdout.close()        
     
 #%%
     
+# CLAM
+# MULTI STAIN
+
+if train_slides:
+    
+    embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches.pth"
+    classification_weights = r"C:/Users/Amaya/Documents/PhD/Data//multi_CLAM_classification.pth"
+   
+    embedding_net = VGG_embedding(embedding_weights, finetuned=False, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping) # add classification weight variable. 
+    
+    if use_gpu:
+        embedding_net.cuda()
+        classification_net.cuda()
+    
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
+    
+    embedding_model, classification_model = train_att_multi_slide(embedding_net, classification_net, train_ids, test_ids,  CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
+    torch.save(classification_model.state_dict(), classification_weights)
+    
+    
+
+# %%
+
+# GRAPH
 # SINGLE STAIN
 
 if train_slides:
@@ -311,6 +338,7 @@ if train_slides:
 
  # %%
 
+# GRAPH
 # MULTI STAIN
 
 if train_slides:
@@ -328,7 +356,7 @@ if train_slides:
     loss_fn = nn.CrossEntropyLoss()
     optimizer_ft = optim.Adam(graph_net.parameters(), lr=0.0001)
 
-    _, graph_model = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=10)
+    _, graph_model = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=20)
     
     torch.save(graph_model.state_dict(), classification_weights)
 
@@ -346,6 +374,7 @@ visualize_embedding(h, graph.y)
     
 #     embedding_model, classification_model = train_att_slides(embedding_net, classification_net, train_ids, test_ids,  CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
 #     torch.save(classification_model.state_dict(), classification_weights)
+
 
 
 # %%

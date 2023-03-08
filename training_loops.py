@@ -179,6 +179,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
         inst_count = 0
         
         train_acc = 0
+        train_count = 0
         
         ###################################
         # TEST
@@ -201,7 +202,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
         
         for batch_idx, loader in enumerate(patients_TRAIN.values()):
 
-            print("\rTraining batch {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
+            #print("\rTraining batch {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
         
             optimizer.zero_grad()
                    
@@ -237,6 +238,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
             loss_value = loss.item()
             
             train_acc += torch.sum(Y_hat == label.data)
+            train_count += 1
             
             instance_loss = instance_dict['instance_loss']
             inst_count+=1
@@ -263,9 +265,9 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
             optimizer.step()
             optimizer.zero_grad()
             
-        train_loss /= len(train_ids)
-        train_error /= len(train_ids)
-        train_accuracy =  train_acc / len(train_ids)
+        train_loss /= train_count
+        train_error /= train_count
+        train_accuracy =  train_acc / train_count
         
         if inst_count > 0:
             train_inst_loss /= inst_count
@@ -286,16 +288,19 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
         ################################
         # TEST
         
+        test_count = 0 
+        
+        prob = []
+        labels = []
+        
         #embedding_net.eval()
         classification_net.eval()
-        
-        prob = np.zeros((len(test_ids), n_classes))
-        labels = np.zeros(len(test_ids))
+    
         #sample_size = classification_net.k_sample
 
         for batch_idx, loader in enumerate(patients_TEST.values()):
             
-            print("\rValidation batch {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
+            #print("\rValidation batch {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
                    
             patient_embedding = []
             #print(patient_embedding)
@@ -319,8 +324,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
                 
                 patient_embedding = torch.stack(patient_embedding)
                 patient_embedding = patient_embedding.cuda()
-                
-                
+                                
             except RuntimeError:
                 continue
             
@@ -328,6 +332,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
             val_acc_logger.log(Y_hat, label)
             
             val_acc += torch.sum(Y_hat == label.data)
+            test_count += 1
             
             loss = loss_fn(logits, label)
 
@@ -343,17 +348,18 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
             inst_labels = instance_dict['inst_labels']
             val_inst_logger.log_batch(inst_preds, inst_labels)
 
-            prob[batch_idx] = Y_prob.detach().to('cpu').numpy()
-            labels[batch_idx] = label.item()
+            prob.append(Y_prob.detach().to('cpu').numpy())
+            labels.append(label.item())
             
             error = classification_net.calculate_error(Y_hat, label)
             val_error += error
                    
-        val_error /= len(test_ids)
-        val_loss /= len(test_ids)
-        val_accuracy = val_acc / len(test_ids)
+        val_error /= test_count
+        val_loss /= test_count
+        val_accuracy = val_acc / test_count
         
         if n_classes == 2:
+            prob =  np.stack(prob, axis=1)[0]
             val_auc = roc_auc_score(labels, prob[:, 1])
             aucs = []
         else:
@@ -404,7 +410,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
     return embedding_net, classification_net
 
 
-def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68, classification_net_CD20, classification_net_HE, embedding_net, graph_net, train_ids, test_ids, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, loss_2, optimizer, embedding_vector_size, n_classes, bag_weight,  num_epochs=1):
+def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer, embedding_vector_size, n_classes, bag_weight,  num_epochs=1):
     
     since = time.time()
     #best_model_embedding_wts = copy.deepcopy(embedding_net.state_dict())
@@ -428,6 +434,8 @@ def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68
         
         train_acc = 0
         
+        train_count = 0
+        
         patient_multi_stain_train = []
         labels_train = []
         all_labels_train = []
@@ -444,18 +452,17 @@ def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68
         val_inst_count= 0
         
         val_acc = 0
+        test_count = 0
 
         ###################################
         # TRAIN
-
+        
+        embedding_net.eval()
         classification_net.train(True)
         
         for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
             
-            print()
             print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
-            print()
-            optimizer_ft.zero_grad()
             
             patient_embedding = []
             labels = []
@@ -481,34 +488,28 @@ def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68
                     embedding = embedding.squeeze(0)
                     slide_embedding.append(embedding)
     
+                try:
+                    
+                    slide_embedding = torch.stack(slide_embedding)
+                    patient_embedding.append(slide_embedding)
+                        
+                except RuntimeError:
+                    continue
+                
             try:
                 
-                slide_embedding = torch.stack(slide_embedding)
-                slide_embedding = slide_embedding.cuda()
+                patient_embedding = torch.cat(patient_embedding)
                 
-                if data.dataset.stain[0] == 'CD138':
-                    classification_net = classification_net_CD138 
-                if data.dataset.stain[0] == 'CD68':
-                    classification_net = classification_net_CD68
-                if data.dataset.stain[0] == 'CD20':
-                    classification_net = classification_net_CD20
-                if data.dataset.stain[0] == 'HE':
-                    classification_net = classification_net_HE   
-
-                logits, Y_prob, Y_hat, _, instance_dict, feature_vector = classification_net(slide_embedding, label=label, instance_eval=True)
-                patient_embedding.append(feature_vector[0].detach().to('cpu'))
-                        
-            except RuntimeError: # some DataLoaders will be empty, as the slide is absent. In theses cases, we use an tensor of zeros to replace the slide. 
-                
-                patient_embedding.append(torch.zeros(embedding_vector_size))
+            except RuntimeError:
+                continue
             
-            
-            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding, label=label, instance_eval=True)
+            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding.cuda(), label=label, instance_eval=True)
             acc_logger.log(Y_hat, label)
             loss = loss_fn(logits, label)
             loss_value = loss.item()
             
             train_acc += torch.sum(Y_hat == label.data)
+            train_count += 1
             
             instance_loss = instance_dict['instance_loss']
             inst_count+=1
@@ -535,9 +536,11 @@ def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68
             optimizer.step()
             optimizer.zero_grad()
             
-        train_loss /= len(train_ids)
-        train_error /= len(train_ids)
-        train_accuracy =  train_acc / len(train_ids)
+        train_loss /= train_count
+        train_error /= train_count
+        train_accuracy =  train_acc / train_count
+        
+        
         
         if inst_count > 0:
             train_inst_loss /= inst_count
@@ -561,59 +564,61 @@ def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68
         #embedding_net.eval()
         classification_net.eval()
         
-        prob = np.zeros((len(test_ids), n_classes))
-        labels = np.zeros(len(test_ids))
+        prob = []
+        labels = []
+        
+        # prob = np.zeros((len(test_ids), n_classes))
+        # labels = np.zeros(len(test_ids))
         #sample_size = classification_net.k_sample
 
         for batch_idx, loader in enumerate(zip(CD138_patients_TEST.values(), CD68_patients_TEST.values(), CD20_patients_TEST.values(), HE_patients_TEST.values())):
             
-            print("\rValidation batch {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
-                   
+            print("\rPatient {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
+            
             patient_embedding = []
-            #print(patient_embedding)
+            labels = []
+            
+            for i, data in enumerate(loader):
+                
+                print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
+                
+                slide_embedding = []
+                
+                for patch in data:
+                    
+                    inputs, label = patch
+            
+                    if use_gpu:
+                        inputs, label = inputs.cuda(), label.cuda()
+                    else:
+                        inputs, label = inputs, label
+            
+                    embedding = embedding_net(inputs)
+            
+                    embedding = embedding.detach().to('cpu')
+                    embedding = embedding.squeeze(0)
+                    slide_embedding.append(embedding)
     
-            for stain in loader:
-                
                 try:
+                    
+                    slide_embedding = torch.stack(slide_embedding)
+                    patient_embedding.append(slide_embedding)
+                        
+                except RuntimeError:
+                    continue
                 
-                    if stain.dataset.stain[0] == 'CD138':
-                        embedding_net = embedding_net_CD138 
-                    if stain.dataset.stain[0] == 'CD68':
-                        embedding_net = embedding_net_CD68
-                    if stain.dataset.stain[0] == 'CD20':
-                        embedding_net = embedding_net_CD20
-                    if stain.dataset.stain[0] == 'HE':
-                        embedding_net = embedding_net_HE   
-                        
-                    embedding_net.cuda()    
-                    embedding_net.eval()
-
-                    for patch in stain:
-                        
-                        inputs, label = patch
+            try:
+                
+                patient_embedding = torch.cat(patient_embedding)
+                
+            except RuntimeError:
+                continue
             
-                        if use_gpu:
-                            inputs, label = inputs.cuda(), label.cuda()
-                        else:
-                            inputs, label = inputs, label
-            
-                        embedding = embedding_net(inputs)
-            
-                        embedding = embedding.detach().to('cpu')
-                        embedding = embedding.squeeze(0)
-                        patient_embedding.append(embedding)
-                                    
-                except IndexError:
-                        continue
-        
-            patient_embedding = torch.stack(patient_embedding)
-            #print(len(patient_embedding))
-            patient_embedding = patient_embedding.cuda()
-            
-            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding, label=label, instance_eval=True)
+            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding.cuda(), label=label, instance_eval=True)
             val_acc_logger.log(Y_hat, label)
             
             val_acc += torch.sum(Y_hat == label.data)
+            test_count +=1 
             
             loss = loss_fn(logits, label)
 
@@ -629,18 +634,18 @@ def train_att_slides_finetuned(classification_net_CD138, classification_net_CD68
             inst_labels = instance_dict['inst_labels']
             val_inst_logger.log_batch(inst_preds, inst_labels)
 
-            prob[batch_idx] = Y_prob.detach().to('cpu').numpy()
-            labels[batch_idx] = label.item()
+            prob.append(Y_prob.detach().to('cpu').numpy())
+            labels.append(label.item())
             
             error = classification_net.calculate_error(Y_hat, label)
             val_error += error
-            
-            
-        val_error /= len(test_ids)
-        val_loss /= len(test_ids)
-        val_accuracy = val_acc / len(test_ids)
+               
+        val_error /= test_count
+        val_loss /= test_count
+        val_accuracy = val_acc / test_count
         
         if n_classes == 2:
+            prob =  np.stack(prob, axis=1)[0]
             val_auc = roc_auc_score(labels, prob[:, 1])
             aucs = []
         else:
