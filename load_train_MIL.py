@@ -271,7 +271,7 @@ if train_slides:
         loss_fn = nn.CrossEntropyLoss()
         optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
         
-        print(key)
+        print(key, flush=True)
         
         _, classification_model = train_att_slides(embedding_net, classification_net, train_stain, test_stain, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
         torch.save(classification_model.state_dict(), classification_weights)
@@ -310,11 +310,8 @@ if train_slides:
 
 if train_slides:
     
-    # patient_stain_train = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
-    # patient_stain_test = [CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST]
-    
-    patient_stain_train = [CD20_patients_TRAIN]
-    patient_stain_test = [CD20_patients_TEST]
+    patient_stain_train = [CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN]
+    patient_stain_test = [CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST]
        
     for train_stain, test_stain in zip(patient_stain_train, patient_stain_test):
         
@@ -331,6 +328,8 @@ if train_slides:
         
         loss_fn = nn.CrossEntropyLoss()
         optimizer_ft = optim.Adam(graph_net.parameters(), lr=0.0001)
+        
+        print(key, flush=True)
 
         _, graph_model = train_graph_slides(embedding_net, graph_net, train_stain, test_stain, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=10)
         
@@ -340,6 +339,9 @@ if train_slides:
 
 # GRAPH
 # MULTI STAIN
+
+
+sys.stdout = open(r"C:\Users\Amaya\Documents\PhD\Data\Graph_multi_stain_results.txt", 'w')
 
 if train_slides:
         
@@ -359,7 +361,9 @@ if train_slides:
     _, graph_model = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=20)
     
     torch.save(graph_model.state_dict(), classification_weights)
-
+        
+sys.stdout.close()        
+    
 # %%
 
 from torch_geometric.utils import to_networkx

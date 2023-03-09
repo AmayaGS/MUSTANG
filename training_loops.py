@@ -842,6 +842,8 @@ def soft_vote(vgg16, loaded_subsets):
     
     #train_total = 0
     
+    probs = []
+    labels = []
     preds_x_class = []
     
     for i, loader in enumerate(loaded_subsets.values()):

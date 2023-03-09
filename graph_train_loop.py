@@ -268,7 +268,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
     best_auc = 0.
 
     for epoch in range(num_epochs):
-        print("Epoch {}/{}".format(epoch, num_epochs))
+        print("Epoch {}/{}".format(epoch, num_epochs), flush=True)
         print('-' * 10)
         
         ##################################
@@ -303,10 +303,9 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
         
         for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
 
-            print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
+            #print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
             
             patient_embedding = []
-            labels = []
            
             for i, data in enumerate(loader):
                 
@@ -331,10 +330,15 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
                     embedding = embedding.detach().to('cpu')
                     embedding = embedding.squeeze(0)
                     slide_embedding.append(embedding)
+                    
+                try:
                 
-                slide_embedding = torch.stack(slide_embedding)
-                patient_embedding.append(slide_embedding)
-
+                    slide_embedding = torch.stack(slide_embedding)
+                    patient_embedding.append(slide_embedding)
+                
+                except RuntimeError:
+                    continue
+                
             try:
                 
                 patient_embedding = torch.cat(patient_embedding)
@@ -354,7 +358,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             train_acc += torch.sum(Y_hat == label.data)
             train_count += 1
         
-            if (batch_idx) % 10 == 0:
+            if (batch_idx + 1) % 20 == 0:
                 print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
                     'label: {}, bag_size: {}'.format(label.item(), patient_embedding.size(0)))
             
@@ -374,7 +378,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
         print('Epoch: {}, train_loss: {:.4f}, train_accuracy: {:.4f}'.format(epoch, total_loss, train_accuracy))
         for i in range(n_classes):
             acc, correct, count = acc_logger.get_summary(i)
-            print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count))
+            print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count), flush=True)
                   
         graph_net.train(False)
         
@@ -391,10 +395,9 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
 
         for batch_idx, loader in enumerate(zip(CD138_patients_TEST.values(), CD68_patients_TEST.values(), CD20_patients_TEST.values(), HE_patients_TEST.values())):
             
-            print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
+            #print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
 
             patient_embedding = []
-            labels = []
             
             for i, data in enumerate(loader):
                 
@@ -420,9 +423,13 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
                     embedding = embedding.squeeze(0)
                     slide_embedding.append(embedding)
                 
-                slide_embedding = torch.stack(slide_embedding)
-                patient_embedding.append(slide_embedding)
-            
+                try:
+                    
+                    slide_embedding = torch.stack(slide_embedding)
+                    patient_embedding.append(slide_embedding)
+                
+                except RuntimeError:
+                    continue            
             try:
                 
                 patient_embedding = torch.cat(patient_embedding)
@@ -474,7 +481,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
         clsf_report = pd.DataFrame(classification_report(labels, np.argmax(prob, axis=1), output_dict=True, zero_division=1)).transpose()
         conf_matrix = confusion_matrix(labels, np.argmax(prob, axis=1))
                     
-        print('\nVal Set, val_loss: {:.4f}, AUC: {:.4f}, Accuracy: {:.4f}'.format(val_loss, val_auc, val_accuracy))
+        print('\nVal Set, val_loss: {:.4f}, AUC: {:.4f}, Accuracy: {:.4f}'.format(val_loss, val_auc, val_accuracy), flush=True)
     
         for i in range(n_classes):
             acc, correct, count = val_acc_logger.get_summary(i)
