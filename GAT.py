@@ -69,26 +69,6 @@ class GAT_topK(torch.nn.Module):
         self.gat3 = GATv2Conv(512*heads, 512, heads=1)
         self.gat4 = GATv2Conv(512*heads, 512, heads=1)
                 
-        # self.topk1 = TopKPooling(4096, pooling_ratio)
-        # self.topk2 = TopKPooling(256*4, pooling_ratio)
-        # self.topk3 = TopKPooling(128*2, pooling_ratio)
-        # self.topk4 = TopKPooling(64, pooling_ratio)
-        # self.topk4 = TopKPooling(64, 0.1)
-        # self.topk5 = TopKPooling(64, 0.01)
-        
-        # self.topk1 = SAGPooling(4096, pooling_ratio)
-        # self.topk2 = SAGPooling(256*4, pooling_ratio)
-        # self.topk3 = SAGPooling(128*2, pooling_ratio)
-        # self.topk4 = SAGPooling(64, pooling_ratio)
-        # self.topk4 = SAGPooling(64, 0.1)
-        
-        # self.pool1 = SAGPooling(4096, ratio=pooling_ratio)
-        
-        # self.lin1 = torch.nn.Linear(64, 38)
-        # self.lin2 = torch.nn.Linear(38, 24)
-        # self.lin3 = torch.nn.Linear(24, 3)
-        
-                
         self.topk1 = SAGPooling(512, pooling_ratio)
         self.topk2 = SAGPooling(512, pooling_ratio)
         self.topk3 = SAGPooling(512, pooling_ratio)

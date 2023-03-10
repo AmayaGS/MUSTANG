@@ -283,6 +283,8 @@ sys.stdout.close()
 # CLAM
 # MULTI STAIN
 
+sys.stdout = open(r"C:\Users\Amaya\Documents\PhD\Data\CLAM_multi_stain_results.txt", 'w')
+
 if train_slides:
     
     embedding_weights = r"C:/Users/Amaya/Documents/PhD/Data//embedding_patches.pth"
@@ -298,10 +300,10 @@ if train_slides:
     loss_fn = nn.CrossEntropyLoss()
     optimizer_ft = optim.Adam(classification_net.parameters(), lr=0.0001)
     
-    embedding_model, classification_model = train_att_multi_slide(embedding_net, classification_net, train_ids, test_ids,  CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=10)
+    embedding_model, classification_model = train_att_multi_slide(embedding_net, classification_net, train_ids, test_ids,  CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, bag_weight=0.7, num_epochs=20)
     torch.save(classification_model.state_dict(), classification_weights)
     
-    
+sys.stdout.close()       
 
 # %%
 

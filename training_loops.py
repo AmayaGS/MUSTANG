@@ -410,7 +410,7 @@ def train_att_slides(embedding_net, classification_net, patients_TRAIN, patients
     return embedding_net, classification_net
 
 
-def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer, embedding_vector_size, n_classes, bag_weight,  num_epochs=1):
+def train_att_multi_slide(embedding_net, classification_net, train_ids, test_ids, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, loss_fn, optimizer, embedding_vector_size, n_classes, bag_weight,  num_epochs=1):
     
     since = time.time()
     #best_model_embedding_wts = copy.deepcopy(embedding_net.state_dict())
@@ -436,10 +436,6 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
         
         train_count = 0
         
-        patient_multi_stain_train = []
-        labels_train = []
-        all_labels_train = []
-        
         ###################################
         # TEST
         
@@ -462,14 +458,13 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
         
         for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
             
-            print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
+            #print("\rPatient {}/{}".format(batch_idx, len(train_ids)), end='', flush=True)
             
             patient_embedding = []
-            labels = []
-            
+                        
             for i, data in enumerate(loader):
                 
-                print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
+                #print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
                 
                 slide_embedding = []
                 
@@ -503,7 +498,7 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
             except RuntimeError:
                 continue
             
-            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding.cuda(), label=label, instance_eval=True)
+            logits, Y_prob, Y_hat, _, instance_dict,_ = classification_net(patient_embedding.cuda(), label=label, instance_eval=True)
             acc_logger.log(Y_hat, label)
             loss = loss_fn(logits, label)
             loss_value = loss.item()
@@ -553,7 +548,7 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
         print('Epoch: {}, train_loss: {:.4f}, train_clustering_loss:  {:.4f}, train_error: {:.4f}, train_accuracy: {:.4f}'.format(epoch, train_loss, train_inst_loss,  train_error, train_accuracy))
         for i in range(n_classes):
             acc, correct, count = acc_logger.get_summary(i)
-            print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count))
+            print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count), flush=True)
                   
         #embedding_net.train(False)
         classification_net.train(False)
@@ -566,21 +561,16 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
         
         prob = []
         labels = []
-        
-        # prob = np.zeros((len(test_ids), n_classes))
-        # labels = np.zeros(len(test_ids))
-        #sample_size = classification_net.k_sample
 
         for batch_idx, loader in enumerate(zip(CD138_patients_TEST.values(), CD68_patients_TEST.values(), CD20_patients_TEST.values(), HE_patients_TEST.values())):
             
-            print("\rPatient {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
+            #print("\rPatient {}/{}".format(batch_idx, len(test_ids)), end='', flush=True)
             
             patient_embedding = []
-            labels = []
-            
+
             for i, data in enumerate(loader):
                 
-                print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
+                #print("\rStain {}/{}".format(i, len(loader)), end='', flush=True)
                 
                 slide_embedding = []
                 
@@ -614,7 +604,7 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
             except RuntimeError:
                 continue
             
-            logits, Y_prob, Y_hat, _, instance_dict = classification_net(patient_embedding.cuda(), label=label, instance_eval=True)
+            logits, Y_prob, Y_hat, _, instance_dict,_ = classification_net(patient_embedding.cuda(), label=label, instance_eval=True)
             val_acc_logger.log(Y_hat, label)
             
             val_acc += torch.sum(Y_hat == label.data)
@@ -681,7 +671,7 @@ def train_att_multi_slide(classification_net, embedding_net, train_ids, test_ids
             sensitivity = conf_matrix[1,1] / (conf_matrix[1,1] + conf_matrix[1,0]) # TP / (TP + FN)
             specificity = conf_matrix[0,0] / (conf_matrix[0,0] + conf_matrix[0,1]) 
             print('Sensitivity: ', sensitivity) 
-            print('Specificity: ', specificity) 
+            print('Specificity: ', specificity, flush=True) 
 
         if val_auc > best_auc:
             best_model_classification_wts = copy.deepcopy(classification_net.state_dict())
