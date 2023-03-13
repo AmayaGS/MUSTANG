@@ -29,7 +29,7 @@ from training_loops import train_att_slides, train_att_multi_slide, test_slides,
 from graph_train_loop import train_graph_slides, train_graph_multi_stain
 
 from attention_models import VGG_embedding, GatedAttention
-from GAT import GAT_topK
+from Graph_model import GAT_topK
 
 from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
 
