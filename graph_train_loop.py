@@ -28,7 +28,7 @@ from sklearn.neighbors import kneighbors_graph
 from torch_geometric.utils import to_networkx
 
 from auxiliary_functions import Accuracy_Logger
-from attention_models import VGG_embedding, GatedAttention
+from clam_model import VGG_embedding, GatedAttention
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:

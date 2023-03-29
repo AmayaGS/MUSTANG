@@ -27,7 +27,7 @@ import torch.nn.functional as F
 #from torch.autograd import Variable
 
 from auxiliary_functions import Accuracy_Logger
-from attention_models import VGG_embedding, GatedAttention
+from clam_model import VGG_embedding, GatedAttention
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:

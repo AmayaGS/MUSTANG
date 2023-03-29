@@ -1,0 +1,12 @@
+#!/bin/bash
+#$ -cwd
+#$ -j y
+#$ -pe smp 8          # 8 cores per GPU
+#$ -l h_rt=20:05:0    # 240 hours runtime
+#$ -l h_vmem=11G      # 11G RAM per core
+#$ -l gpu=1           # request 1 GPU
+#$ -m eas
+
+module load miniconda
+conda activate pytorch_env
+python load_train_graph_single.py
