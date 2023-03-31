@@ -1,0 +1,55 @@
+Epoch 0/1
+----------
+- batch 19, loss: 0.6304, label: 1, bag_size: 2050
+- batch 39, loss: 0.7684, label: 0, bag_size: 352
+- batch 59, loss: 0.7604, label: 0, bag_size: 577
+- batch 79, loss: 0.6080, label: 1, bag_size: 2145
+- batch 99, loss: 0.8607, label: 0, bag_size: 750
+
+Epoch: 0, train_loss: 0.0077, train_accuracy: 0.5421
+class 0: acc 0.0, correct 0/49
+class 1: acc 1.0, correct 58/58
+
+Val Set, val_loss: 0.6674, AUC: 0.6775, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+
+Training completed in 78m 34s
+Epoch 0/1
+----------
+- batch 19, loss: 0.6869, label: 1, bag_size: 2050
+- batch 39, loss: 0.7129, label: 0, bag_size: 352
+- batch 59, loss: 0.7154, label: 0, bag_size: 577
+- batch 79, loss: 0.6301, label: 1, bag_size: 2145
+- batch 99, loss: 0.9615, label: 0, bag_size: 750
+
+Epoch: 0, train_loss: 0.0080, train_accuracy: 0.5047
+class 0: acc 0.04081632653061224, correct 2/49
+class 1: acc 0.896551724137931, correct 52/58
+
+Val Set, val_loss: 0.6623, AUC: 0.6734, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+
+Training completed in 67m 53s
+Epoch 0/1
