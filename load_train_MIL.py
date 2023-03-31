@@ -14,7 +14,7 @@ from PIL import ImageFile
 
 import pandas as pd
 
-#from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 
 import torch
 import torch.nn as nn
@@ -25,13 +25,13 @@ from torchvision import transforms
 
 from loaders import Loaders
 
-from training_loops import train_att_slides, train_att_multi_slide
+from training_loops import train_att_slides, train_att_multi_slide, test_slides, soft_vote
 from graph_train_loop import train_graph_slides, train_graph_multi_stain
 
 from clam_model import VGG_embedding, GatedAttention
 from Graph_model import GAT_topK
 
-#from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
+from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
@@ -107,7 +107,7 @@ else:
 
 # %%
 
-file = r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"
+file = "/data/scratch/wpw030/RA/df_all_stains_patches_labels_HPC.csv"
 df = pd.read_csv(file, header=0)  
 df = df.dropna(subset=[label])
 
@@ -126,7 +126,7 @@ CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAI
 # CLAM
 # SINGLE STAIN
 
-sys.stdout = open(r"C:\Users\Amaya\Documents\PhD\Data\CLAM_single_stain_results.txt", 'w')
+sys.stdout = open("/data/home/wpw030/MangoMIL/Graph_single_stain_results.txt", 'w')
                 
 if train_slides:
     
@@ -255,38 +255,38 @@ sys.stdout.close()
 
 # %%
 
-# if testing_slides:
+if testing_slides:
     
-#     loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.CrossEntropyLoss()
     
-#     embedding_net = VGG_embedding(embedding_weights, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-#     classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping)
+    embedding_net = VGG_embedding(embedding_weights, embedding_vector_size=embedding_vector_size, n_classes=n_classes)
+    classification_net = GatedAttention(n_classes=n_classes, subtyping=subtyping)
 
-#     classification_net.load_state_dict(torch.load(classification_weights), strict=True)
+    classification_net.load_state_dict(torch.load(classification_weights), strict=True)
     
-#     if use_gpu:
-#         embedding_net.cuda()
-#         classification_net.cuda()
+    if use_gpu:
+        embedding_net.cuda()
+        classification_net.cuda()
 
-# # %%
+# %%
 
-# if testing_slides:
+if testing_slides:
     
-#     test_error, test_auc, test_accuracy, test_acc_logger, labels, prob, clsf_report, conf_matrix, sensitivity, specificity, incorrect_preds =       test_slides(embedding_net, classification_net, test_loaded_subsets, loss_fn, n_classes=2)
+    test_error, test_auc, test_accuracy, test_acc_logger, labels, prob, clsf_report, conf_matrix, sensitivity, specificity, incorrect_preds =       test_slides(embedding_net, classification_net, test_loaded_subsets, loss_fn, n_classes=2)
 
-# # %%
+# %%
 
-# target_names=["Fibroid", "M/Lymphoid"]
+target_names=["Fibroid", "M/Lymphoid"]
 
-# auc_plot(labels, prob[:, 1], test_auc)
-# pr_plot(labels, prob[:, 1], sensitivity, specificity)
-# plot_confusion_matrix(conf_matrix, target_names, title='Confusion matrix', cmap=None, normalize=True)
+auc_plot(labels, prob[:, 1], test_auc)
+pr_plot(labels, prob[:, 1], sensitivity, specificity)
+plot_confusion_matrix(conf_matrix, target_names, title='Confusion matrix', cmap=None, normalize=True)
 
 
-# ###############################
-# # %%
+###############################
+# %%
 
-# history = soft_vote(embedding_net, test_loaded_subsets)
+history = soft_vote(embedding_net, test_loaded_subsets)
 
-# # %%
+# %%
 

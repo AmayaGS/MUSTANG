@@ -4,3 +4,5 @@ with_fintune_bulk_attention.txt
 no_fintune_bulk_attention.txt
 propagating_labels.py
 __pycache__
+Graph ablation/GAT_TopK.qsub
+*.qsub

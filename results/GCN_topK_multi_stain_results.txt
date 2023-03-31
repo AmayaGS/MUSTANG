@@ -1,0 +1,601 @@
+Epoch 0/50
+----------
+- batch 19, loss: 0.6803, label: 1, bag_size: 2050
+- batch 39, loss: 0.7255, label: 0, bag_size: 352
+- batch 59, loss: 0.7242, label: 0, bag_size: 577
+- batch 79, loss: 0.5889, label: 1, bag_size: 2145
+- batch 99, loss: 0.9091, label: 0, bag_size: 750
+
+Epoch: 0, train_loss: 0.0085, train_accuracy: 0.5140
+class 0: acc 0.08163265306122448, correct 4/49
+class 1: acc 0.8793103448275862, correct 51/58
+
+Val Set, val_loss: 0.6601, AUC: 0.6531, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 1/50
+----------
+- batch 19, loss: 0.6769, label: 1, bag_size: 2050
+- batch 39, loss: 0.7234, label: 0, bag_size: 352
+- batch 59, loss: 0.7298, label: 0, bag_size: 577
+- batch 79, loss: 0.6515, label: 1, bag_size: 2145
+- batch 99, loss: 0.7543, label: 0, bag_size: 750
+
+Epoch: 1, train_loss: 0.0074, train_accuracy: 0.5421
+class 0: acc 0.0, correct 0/49
+class 1: acc 1.0, correct 58/58
+
+Val Set, val_loss: 0.6710, AUC: 0.7606, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 2/50
+----------
+- batch 19, loss: 0.6465, label: 1, bag_size: 2050
+- batch 39, loss: 0.7696, label: 0, bag_size: 352
+- batch 59, loss: 0.7170, label: 0, bag_size: 577
+- batch 79, loss: 0.6189, label: 1, bag_size: 2145
+- batch 99, loss: 0.8905, label: 0, bag_size: 750
+
+Epoch: 2, train_loss: 0.0083, train_accuracy: 0.4860
+class 0: acc 0.061224489795918366, correct 3/49
+class 1: acc 0.8448275862068966, correct 49/58
+
+Val Set, val_loss: 0.6397, AUC: 0.6998, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 3/50
+----------
+- batch 19, loss: 0.4367, label: 1, bag_size: 2050
+- batch 39, loss: 0.7383, label: 0, bag_size: 352
+- batch 59, loss: 0.9184, label: 0, bag_size: 577
+- batch 79, loss: 0.6003, label: 1, bag_size: 2145
+- batch 99, loss: 0.8976, label: 0, bag_size: 750
+
+Epoch: 3, train_loss: 0.0079, train_accuracy: 0.5140
+class 0: acc 0.0, correct 0/49
+class 1: acc 0.9482758620689655, correct 55/58
+
+Val Set, val_loss: 0.6159, AUC: 0.7606, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 4/50
+----------
+- batch 19, loss: 0.0906, label: 1, bag_size: 2050
+- batch 39, loss: 0.6060, label: 0, bag_size: 352
+- batch 59, loss: 0.6171, label: 0, bag_size: 577
+- batch 79, loss: 0.6188, label: 1, bag_size: 2145
+- batch 99, loss: 0.8600, label: 0, bag_size: 750
+
+Epoch: 4, train_loss: 0.0075, train_accuracy: 0.4673
+class 0: acc 0.4489795918367347, correct 22/49
+class 1: acc 0.4827586206896552, correct 28/58
+
+Val Set, val_loss: 0.6607, AUC: 0.6876, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 5/50
+----------
+- batch 19, loss: 0.6065, label: 1, bag_size: 2050
+- batch 39, loss: 0.7427, label: 0, bag_size: 352
+- batch 59, loss: 0.7564, label: 0, bag_size: 577
+- batch 79, loss: 0.5794, label: 1, bag_size: 2145
+- batch 99, loss: 0.9448, label: 0, bag_size: 750
+
+Epoch: 5, train_loss: 0.0083, train_accuracy: 0.5234
+class 0: acc 0.04081632653061224, correct 2/49
+class 1: acc 0.9310344827586207, correct 54/58
+
+Val Set, val_loss: 0.6481, AUC: 0.6714, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 6/50
+----------
+- batch 19, loss: 0.6618, label: 1, bag_size: 2050
+- batch 39, loss: 0.6435, label: 0, bag_size: 352
+- batch 59, loss: 0.5729, label: 0, bag_size: 577
+- batch 79, loss: 0.3386, label: 1, bag_size: 2145
+- batch 99, loss: 1.0753, label: 0, bag_size: 750
+
+Epoch: 6, train_loss: 0.0107, train_accuracy: 0.5888
+class 0: acc 0.30612244897959184, correct 15/49
+class 1: acc 0.8275862068965517, correct 48/58
+
+Val Set, val_loss: 0.6382, AUC: 0.6633, Accuracy: 0.6304
+class 0: acc 0.0, correct 0/17
+class 1: acc 1.0, correct 29/29
+              precision    recall  f1-score    support
+0              1.000000  0.000000  0.000000  17.000000
+1              0.630435  1.000000  0.773333  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.815217  0.500000  0.386667  46.000000
+weighted avg   0.767013  0.630435  0.487536  46.000000
+[[ 0 17]
+ [ 0 29]]
+Sensitivity:  1.0
+Specificity:  0.0
+Epoch 7/50
+----------
+- batch 19, loss: 0.5853, label: 1, bag_size: 2050
+- batch 39, loss: 0.6672, label: 0, bag_size: 352
+- batch 59, loss: 0.8656, label: 0, bag_size: 577
+- batch 79, loss: 0.3956, label: 1, bag_size: 2145
+- batch 99, loss: 1.0498, label: 0, bag_size: 750
+
+Epoch: 7, train_loss: 0.0100, train_accuracy: 0.6168
+class 0: acc 0.2653061224489796, correct 13/49
+class 1: acc 0.9137931034482759, correct 53/58
+
+Val Set, val_loss: 0.6128, AUC: 0.7079, Accuracy: 0.6957
+class 0: acc 0.4117647058823529, correct 7/17
+class 1: acc 0.8620689655172413, correct 25/29
+              precision    recall  f1-score    support
+0              0.636364  0.411765  0.500000  17.000000
+1              0.714286  0.862069  0.781250  29.000000
+accuracy       0.695652  0.695652  0.695652   0.695652
+macro avg      0.675325  0.636917  0.640625  46.000000
+weighted avg   0.685488  0.695652  0.677310  46.000000
+[[ 7 10]
+ [ 4 25]]
+Sensitivity:  0.8620689655172413
+Specificity:  0.4117647058823529
+Epoch 8/50
+----------
+- batch 19, loss: 0.6414, label: 1, bag_size: 2050
+- batch 39, loss: 0.5488, label: 0, bag_size: 352
+- batch 59, loss: 0.7676, label: 0, bag_size: 577
+- batch 79, loss: 0.1620, label: 1, bag_size: 2145
+- batch 99, loss: 0.9290, label: 0, bag_size: 750
+
+Epoch: 8, train_loss: 0.0110, train_accuracy: 0.6916
+class 0: acc 0.6122448979591837, correct 30/49
+class 1: acc 0.7586206896551724, correct 44/58
+
+Val Set, val_loss: 0.6009, AUC: 0.7323, Accuracy: 0.6739
+class 0: acc 0.4117647058823529, correct 7/17
+class 1: acc 0.8275862068965517, correct 24/29
+              precision    recall  f1-score    support
+0              0.583333  0.411765  0.482759  17.000000
+1              0.705882  0.827586  0.761905  29.000000
+accuracy       0.673913  0.673913  0.673913   0.673913
+macro avg      0.644608  0.619675  0.622332  46.000000
+weighted avg   0.660592  0.673913  0.658742  46.000000
+[[ 7 10]
+ [ 5 24]]
+Sensitivity:  0.8275862068965517
+Specificity:  0.4117647058823529
+Epoch 9/50
+----------
+- batch 19, loss: 0.4961, label: 1, bag_size: 2050
+- batch 39, loss: 0.4661, label: 0, bag_size: 352
+- batch 59, loss: 0.8686, label: 0, bag_size: 577
+- batch 79, loss: 0.1013, label: 1, bag_size: 2145
+- batch 99, loss: 0.7556, label: 0, bag_size: 750
+
+Epoch: 9, train_loss: 0.0101, train_accuracy: 0.7290
+class 0: acc 0.6122448979591837, correct 30/49
+class 1: acc 0.8275862068965517, correct 48/58
+
+Val Set, val_loss: 0.6143, AUC: 0.7383, Accuracy: 0.6522
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5862068965517241, correct 17/29
+              precision    recall  f1-score    support
+0              0.520000  0.764706  0.619048  17.000000
+1              0.809524  0.586207  0.680000  29.000000
+accuracy       0.652174  0.652174  0.652174   0.652174
+macro avg      0.664762  0.675456  0.649524  46.000000
+weighted avg   0.702526  0.652174  0.657474  46.000000
+[[13  4]
+ [12 17]]
+Sensitivity:  0.5862068965517241
+Specificity:  0.7647058823529411
+Epoch 10/50
+----------
+- batch 19, loss: 0.5226, label: 1, bag_size: 2050
+- batch 39, loss: 0.2873, label: 0, bag_size: 352
+- batch 59, loss: 0.3942, label: 0, bag_size: 577
+- batch 79, loss: 0.1091, label: 1, bag_size: 2145
+- batch 99, loss: 0.5502, label: 0, bag_size: 750
+
+Epoch: 10, train_loss: 0.0111, train_accuracy: 0.7664
+class 0: acc 0.7142857142857143, correct 35/49
+class 1: acc 0.8103448275862069, correct 47/58
+
+Val Set, val_loss: 0.6069, AUC: 0.7647, Accuracy: 0.6304
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5517241379310345, correct 16/29
+              precision    recall  f1-score    support
+0              0.500000  0.764706  0.604651  17.000000
+1              0.800000  0.551724  0.653061  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.650000  0.658215  0.628856  46.000000
+weighted avg   0.689130  0.630435  0.635171  46.000000
+[[13  4]
+ [13 16]]
+Sensitivity:  0.5517241379310345
+Specificity:  0.7647058823529411
+Epoch 11/50
+----------
+- batch 19, loss: 0.5027, label: 1, bag_size: 2050
+- batch 39, loss: 0.3048, label: 0, bag_size: 352
+- batch 59, loss: 0.4663, label: 0, bag_size: 577
+- batch 79, loss: 0.0400, label: 1, bag_size: 2145
+- batch 99, loss: 0.5156, label: 0, bag_size: 750
+
+Epoch: 11, train_loss: 0.0117, train_accuracy: 0.7664
+class 0: acc 0.7346938775510204, correct 36/49
+class 1: acc 0.7931034482758621, correct 46/58
+
+Val Set, val_loss: 0.5922, AUC: 0.7809, Accuracy: 0.6522
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5862068965517241, correct 17/29
+              precision    recall  f1-score    support
+0              0.520000  0.764706  0.619048  17.000000
+1              0.809524  0.586207  0.680000  29.000000
+accuracy       0.652174  0.652174  0.652174   0.652174
+macro avg      0.664762  0.675456  0.649524  46.000000
+weighted avg   0.702526  0.652174  0.657474  46.000000
+[[13  4]
+ [12 17]]
+Sensitivity:  0.5862068965517241
+Specificity:  0.7647058823529411
+Epoch 12/50
+----------
+- batch 19, loss: 0.3099, label: 1, bag_size: 2050
+- batch 39, loss: 0.3637, label: 0, bag_size: 352
+- batch 59, loss: 0.2876, label: 0, bag_size: 577
+- batch 79, loss: 0.0478, label: 1, bag_size: 2145
+- batch 99, loss: 0.4785, label: 0, bag_size: 750
+
+Epoch: 12, train_loss: 0.0089, train_accuracy: 0.7944
+class 0: acc 0.7755102040816326, correct 38/49
+class 1: acc 0.8103448275862069, correct 47/58
+
+Val Set, val_loss: 0.6324, AUC: 0.7992, Accuracy: 0.5870
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.4827586206896552, correct 14/29
+              precision    recall  f1-score    support
+0              0.464286  0.764706  0.577778  17.000000
+1              0.777778  0.482759  0.595745  29.000000
+accuracy       0.586957  0.586957  0.586957   0.586957
+macro avg      0.621032  0.623732  0.586761  46.000000
+weighted avg   0.661922  0.586957  0.589105  46.000000
+[[13  4]
+ [15 14]]
+Sensitivity:  0.4827586206896552
+Specificity:  0.7647058823529411
+Epoch 13/50
+----------
+- batch 19, loss: 0.1376, label: 1, bag_size: 2050
+- batch 39, loss: 0.3058, label: 0, bag_size: 352
+- batch 59, loss: 0.5795, label: 0, bag_size: 577
+- batch 79, loss: 0.0142, label: 1, bag_size: 2145
+- batch 99, loss: 0.3496, label: 0, bag_size: 750
+
+Epoch: 13, train_loss: 0.0165, train_accuracy: 0.8131
+class 0: acc 0.8163265306122449, correct 40/49
+class 1: acc 0.8103448275862069, correct 47/58
+
+Val Set, val_loss: 0.6155, AUC: 0.8215, Accuracy: 0.6304
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5517241379310345, correct 16/29
+              precision    recall  f1-score    support
+0              0.500000  0.764706  0.604651  17.000000
+1              0.800000  0.551724  0.653061  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.650000  0.658215  0.628856  46.000000
+weighted avg   0.689130  0.630435  0.635171  46.000000
+[[13  4]
+ [13 16]]
+Sensitivity:  0.5517241379310345
+Specificity:  0.7647058823529411
+Epoch 14/50
+----------
+- batch 19, loss: 0.2135, label: 1, bag_size: 2050
+- batch 39, loss: 0.2058, label: 0, bag_size: 352
+- batch 59, loss: 0.2849, label: 0, bag_size: 577
+- batch 79, loss: 0.0850, label: 1, bag_size: 2145
+- batch 99, loss: 0.3084, label: 0, bag_size: 750
+
+Epoch: 14, train_loss: 0.0132, train_accuracy: 0.8318
+class 0: acc 0.8367346938775511, correct 41/49
+class 1: acc 0.8275862068965517, correct 48/58
+
+Val Set, val_loss: 0.5812, AUC: 0.8256, Accuracy: 0.6522
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5862068965517241, correct 17/29
+              precision    recall  f1-score    support
+0              0.520000  0.764706  0.619048  17.000000
+1              0.809524  0.586207  0.680000  29.000000
+accuracy       0.652174  0.652174  0.652174   0.652174
+macro avg      0.664762  0.675456  0.649524  46.000000
+weighted avg   0.702526  0.652174  0.657474  46.000000
+[[13  4]
+ [12 17]]
+Sensitivity:  0.5862068965517241
+Specificity:  0.7647058823529411
+Epoch 15/50
+----------
+- batch 19, loss: 0.2439, label: 1, bag_size: 2050
+- batch 39, loss: 0.1634, label: 0, bag_size: 352
+- batch 59, loss: 0.3028, label: 0, bag_size: 577
+- batch 79, loss: 0.0421, label: 1, bag_size: 2145
+- batch 99, loss: 0.2212, label: 0, bag_size: 750
+
+Epoch: 15, train_loss: 0.0094, train_accuracy: 0.8505
+class 0: acc 0.8571428571428571, correct 42/49
+class 1: acc 0.8448275862068966, correct 49/58
+
+Val Set, val_loss: 0.5856, AUC: 0.8276, Accuracy: 0.6304
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5517241379310345, correct 16/29
+              precision    recall  f1-score    support
+0              0.500000  0.764706  0.604651  17.000000
+1              0.800000  0.551724  0.653061  29.000000
+accuracy       0.630435  0.630435  0.630435   0.630435
+macro avg      0.650000  0.658215  0.628856  46.000000
+weighted avg   0.689130  0.630435  0.635171  46.000000
+[[13  4]
+ [13 16]]
+Sensitivity:  0.5517241379310345
+Specificity:  0.7647058823529411
+Epoch 16/50
+----------
+- batch 19, loss: 0.1302, label: 1, bag_size: 2050
+- batch 39, loss: 0.1358, label: 0, bag_size: 352
+- batch 59, loss: 0.2657, label: 0, bag_size: 577
+- batch 79, loss: 0.0265, label: 1, bag_size: 2145
+- batch 99, loss: 0.1517, label: 0, bag_size: 750
+
+Epoch: 16, train_loss: 0.0089, train_accuracy: 0.8411
+class 0: acc 0.8571428571428571, correct 42/49
+class 1: acc 0.8275862068965517, correct 48/58
+
+Val Set, val_loss: 0.5625, AUC: 0.8215, Accuracy: 0.7174
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.6896551724137931, correct 20/29
+              precision    recall  f1-score    support
+0              0.590909  0.764706  0.666667  17.000000
+1              0.833333  0.689655  0.754717  29.000000
+accuracy       0.717391  0.717391  0.717391   0.717391
+macro avg      0.712121  0.727181  0.710692  46.000000
+weighted avg   0.743742  0.717391  0.722177  46.000000
+[[13  4]
+ [ 9 20]]
+Sensitivity:  0.6896551724137931
+Specificity:  0.7647058823529411
+Epoch 17/50
+----------
+- batch 19, loss: 0.0245, label: 1, bag_size: 2050
+- batch 39, loss: 0.1604, label: 0, bag_size: 352
+- batch 59, loss: 0.1688, label: 0, bag_size: 577
+- batch 79, loss: 0.0019, label: 1, bag_size: 2145
+- batch 99, loss: 0.1801, label: 0, bag_size: 750
+
+Epoch: 17, train_loss: 0.0142, train_accuracy: 0.8692
+class 0: acc 0.8775510204081632, correct 43/49
+class 1: acc 0.8620689655172413, correct 50/58
+
+Val Set, val_loss: 0.5229, AUC: 0.8154, Accuracy: 0.7391
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.7241379310344828, correct 21/29
+              precision    recall  f1-score   support
+0              0.619048  0.764706  0.684211  17.00000
+1              0.840000  0.724138  0.777778  29.00000
+accuracy       0.739130  0.739130  0.739130   0.73913
+macro avg      0.729524  0.744422  0.730994  46.00000
+weighted avg   0.758344  0.739130  0.743199  46.00000
+[[13  4]
+ [ 8 21]]
+Sensitivity:  0.7241379310344828
+Specificity:  0.7647058823529411
+Epoch 18/50
+----------
+- batch 19, loss: 0.0656, label: 1, bag_size: 2050
+- batch 39, loss: 0.2261, label: 0, bag_size: 352
+- batch 59, loss: 0.1217, label: 0, bag_size: 577
+- batch 79, loss: 0.0205, label: 1, bag_size: 2145
+- batch 99, loss: 0.0877, label: 0, bag_size: 750
+
+Epoch: 18, train_loss: 0.0084, train_accuracy: 0.8505
+class 0: acc 0.8979591836734694, correct 44/49
+class 1: acc 0.8103448275862069, correct 47/58
+
+Val Set, val_loss: 0.6019, AUC: 0.8256, Accuracy: 0.6957
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.6551724137931034, correct 19/29
+              precision    recall  f1-score    support
+0              0.565217  0.764706  0.650000  17.000000
+1              0.826087  0.655172  0.730769  29.000000
+accuracy       0.695652  0.695652  0.695652   0.695652
+macro avg      0.695652  0.709939  0.690385  46.000000
+weighted avg   0.729679  0.695652  0.700920  46.000000
+[[13  4]
+ [10 19]]
+Sensitivity:  0.6551724137931034
+Specificity:  0.7647058823529411
+Epoch 19/50
+----------
+- batch 19, loss: 0.0268, label: 1, bag_size: 2050
+- batch 39, loss: 0.2133, label: 0, bag_size: 352
+- batch 59, loss: 0.2308, label: 0, bag_size: 577
+- batch 79, loss: 0.0036, label: 1, bag_size: 2145
+- batch 99, loss: 0.1295, label: 0, bag_size: 750
+
+Epoch: 19, train_loss: 0.0082, train_accuracy: 0.8785
+class 0: acc 0.8979591836734694, correct 44/49
+class 1: acc 0.8620689655172413, correct 50/58
+
+Val Set, val_loss: 0.5862, AUC: 0.8114, Accuracy: 0.7174
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.6896551724137931, correct 20/29
+              precision    recall  f1-score    support
+0              0.590909  0.764706  0.666667  17.000000
+1              0.833333  0.689655  0.754717  29.000000
+accuracy       0.717391  0.717391  0.717391   0.717391
+macro avg      0.712121  0.727181  0.710692  46.000000
+weighted avg   0.743742  0.717391  0.722177  46.000000
+[[13  4]
+ [ 9 20]]
+Sensitivity:  0.6896551724137931
+Specificity:  0.7647058823529411
+Epoch 20/50
+----------
+- batch 19, loss: 0.0038, label: 1, bag_size: 2050
+- batch 39, loss: 0.1135, label: 0, bag_size: 352
+- batch 59, loss: 0.1498, label: 0, bag_size: 577
+- batch 79, loss: 0.0001, label: 1, bag_size: 2145
+- batch 99, loss: 0.0265, label: 0, bag_size: 750
+
+Epoch: 20, train_loss: 0.0022, train_accuracy: 0.8972
+class 0: acc 0.9387755102040817, correct 46/49
+class 1: acc 0.8620689655172413, correct 50/58
+
+Val Set, val_loss: 0.6359, AUC: 0.8032, Accuracy: 0.6957
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.6551724137931034, correct 19/29
+              precision    recall  f1-score    support
+0              0.565217  0.764706  0.650000  17.000000
+1              0.826087  0.655172  0.730769  29.000000
+accuracy       0.695652  0.695652  0.695652   0.695652
+macro avg      0.695652  0.709939  0.690385  46.000000
+weighted avg   0.729679  0.695652  0.700920  46.000000
+[[13  4]
+ [10 19]]
+Sensitivity:  0.6551724137931034
+Specificity:  0.7647058823529411
+Epoch 21/50
+----------
+- batch 19, loss: 0.0057, label: 1, bag_size: 2050
+- batch 39, loss: 0.0432, label: 0, bag_size: 352
+- batch 59, loss: 0.1361, label: 0, bag_size: 577
+- batch 79, loss: 0.0004, label: 1, bag_size: 2145
+- batch 99, loss: 0.0215, label: 0, bag_size: 750
+
+Epoch: 21, train_loss: 0.0046, train_accuracy: 0.8692
+class 0: acc 0.8979591836734694, correct 44/49
+class 1: acc 0.8448275862068966, correct 49/58
+
+Val Set, val_loss: 0.5891, AUC: 0.8093, Accuracy: 0.7174
+class 0: acc 0.7058823529411765, correct 12/17
+class 1: acc 0.7241379310344828, correct 21/29
+              precision    recall  f1-score    support
+0              0.600000  0.705882  0.648649  17.000000
+1              0.807692  0.724138  0.763636  29.000000
+accuracy       0.717391  0.717391  0.717391   0.717391
+macro avg      0.703846  0.715010  0.706143  46.000000
+weighted avg   0.730936  0.717391  0.721141  46.000000
+[[12  5]
+ [ 8 21]]
+Sensitivity:  0.7241379310344828
+Specificity:  0.7058823529411765
+Epoch 22/50
+----------
+- batch 19, loss: 0.0279, label: 1, bag_size: 2050
+- batch 39, loss: 0.3670, label: 0, bag_size: 352
+- batch 59, loss: 0.1284, label: 0, bag_size: 577
+- batch 79, loss: 0.0009, label: 1, bag_size: 2145
+- batch 99, loss: 0.0564, label: 0, bag_size: 750
+
+Epoch: 22, train_loss: 0.0038, train_accuracy: 0.9252
+class 0: acc 0.9795918367346939, correct 48/49
+class 1: acc 0.8793103448275862, correct 51/58
+
+Val Set, val_loss: 0.7065, AUC: 0.7992, Accuracy: 0.6522
+class 0: acc 0.7647058823529411, correct 13/17
+class 1: acc 0.5862068965517241, correct 17/29
+              precision    recall  f1-score    support
+0              0.520000  0.764706  0.619048  17.000000
+1              0.809524  0.586207  0.680000  29.000000
+accuracy       0.652174  0.652174  0.652174   0.652174
+macro avg      0.664762  0.675456  0.649524  46.000000
+weighted avg   0.702526  0.652174  0.657474  46.000000
+[[13  4]
+ [12 17]]
+Sensitivity:  0.5862068965517241
+Specificity:  0.7647058823529411
+Epoch 23/50
+----------
+- batch 19, loss: 0.0000, label: 1, bag_size: 2050
+- batch 39, loss: 0.0933, label: 0, bag_size: 352
+- batch 59, loss: 0.0749, label: 0, bag_size: 577
+- batch 79, loss: 0.0000, label: 1, bag_size: 2145
+- batch 99, loss: 0.0416, label: 0, bag_size: 750
+
+Epoch: 23, train_loss: 0.0105, train_accuracy: 0.8879
+class 0: acc 0.9183673469387755, correct 45/49
+class 1: acc 0.8620689655172413, correct 50/58
+
+Val Set, val_loss: 0.6372, AUC: 0.8012, Accuracy: 0.7609
+class 0: acc 0.7058823529411765, correct 12/17
+class 1: acc 0.7931034482758621, correct 23/29
+              precision    recall  f1-score   support
+0              0.666667  0.705882  0.685714  17.00000
+1              0.821429  0.793103  0.807018  29.00000
+accuracy       0.760870  0.760870  0.760870   0.76087
+macro avg      0.744048  0.749493  0.746366  46.00000
+weighted avg   0.764234  0.760870  0.762188  46.00000
+[[12  5]
+ [ 6 23]]
+Sensitivity:  0.7931034482758621
+Specificity:  0.7058823529411765
+Epoch 24/50
