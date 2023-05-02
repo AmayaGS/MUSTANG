@@ -322,3 +322,103 @@ class GCN_topK(torch.nn.Module):
     
 # %%
 
+class GAT_model(torch.nn.Module):
+    
+    """Graph Attention Network for full slide graph"""
+    
+    def __init__(self, dim_in, heads=1, pooling_ratio=0.5):
+        
+        super().__init__()
+        
+        self.pooling_ratio = pooling_ratio
+        
+        self.gat1 = GATv2Conv(dim_in, 512, heads=1)
+        self.gat2 = GATv2Conv(512*heads, 512, heads=1)
+        self.gat3 = GATv2Conv(512*heads, 512, heads=1)
+        self.gat4 = GATv2Conv(512*heads, 512, heads=1)
+        
+        self.lin1 = torch.nn.Linear(512 * 2, 512)
+        self.lin2 = torch.nn.Linear(512, 512 // 2)
+        self.lin3 = torch.nn.Linear(512 // 2, 2)
+
+
+    def forward(self, data):
+        
+        x, edge_index = data.x, data.edge_index, data.batch
+        
+        x = self.gat1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+
+        x = self.gat3(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat4(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.lin1(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        x = self.lin2(x)
+        x = F.relu(x)
+        x_logits = self.lin3(x)
+        x_out = F.softmax(x_logits, dim=1)
+
+        return x_logits, x_out
+	
+# %%
+
+class GCN_model(torch.nn.Module):
+    
+    """Graph Attention Network for full slide graph"""
+    
+    def __init__(self, dim_in, heads=1, pooling_ratio=0.5):
+        
+        super().__init__()
+        
+        self.pooling_ratio = pooling_ratio
+        
+        self.gat1 = GCNConv(dim_in, 512)
+        self.gat2 = GCNConv(512*heads, 512)
+        self.gat3 = GCNConv(512*heads, 512)
+        self.gat4 = GCNConv(512*heads, 512)
+        
+        self.lin1 = torch.nn.Linear(512 * 2, 512)
+        self.lin2 = torch.nn.Linear(512, 512 // 2)
+        self.lin3 = torch.nn.Linear(512 // 2, 2)
+
+    def forward(self, data):
+        
+        x, edge_index = data.x, data.edge_index, data.batch
+        
+        x = self.gat1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+
+        x = self.gat3(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat4(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.lin1(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        x = self.lin2(x)
+        x = F.relu(x)
+        x_logits = self.lin3(x)
+        x_out = F.softmax(x_logits, dim=1)
+
+        return x_logits, x_out

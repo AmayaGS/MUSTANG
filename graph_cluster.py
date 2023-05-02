@@ -185,15 +185,33 @@ for i, slides in enumerate(data):
 # 	patient_embedding = torch.cat(patient_embedding)            
 # except RuntimeError: 
 #     continue
+patient_embedding = torch.cat(patient_embedding) 
+
+# %%    
+       
+knn_graph = kneighbors_graph(patient_embedding, 5, mode='connectivity', include_self=False)
+edge_index = torch.tensor(np.array(knn_graph.nonzero()),dtype=torch.long)
 
 # %%
 
-patient_embedding = torch.cat(patient_embedding) 
-           
-knn_graph = kneighbors_graph(patient_embedding, 5, mode='connectivity', include_self=False)
-edge_index = torch.tensor(np.array(knn_graph.nonzero()),dtype=torch.long)
-data = Data(x=patient_embedding, edge_index=edge_index)
+graph_model = Data(x=patient_embedding, edge_index=edge_index)
 		
+#%%
+
+from networkx.drawing.nx_agraph import graphviz_layout
+
+# %%
+
+graph = to_networkx(graph_model)
+
+# Plot the graph
+pos = nx.nx_agraph.graphviz_layout(graph, prog="fdp")
+
+#pos = nx.spring_layout(graph)
+nx.draw(graph, pos, with_labels=False, node_size=1, width=0.1, alpha=0.4, arrows=False)
+plt.show()
+
+
 # %%
 
 # loader_colors = {'CD138': 'orange', 'CD68': 'red', 'CD20': 'blue', 'HE': 'pink'}
@@ -234,6 +252,35 @@ data = Data(x=patient_embedding, edge_index=edge_index)
 #%%
 
 loader_colors = {'CD138': 'orange', 'CD68': 'red', 'CD20': 'blue', 'HE': 'purple'}
+
+graph = to_networkx(graph_model)
+
+# Plot the graph
+layout = nx.spring_layout(graph)
+
+# create the scatter plot with icons
+fig, ax = plt.subplots(figsize=(50, 50))
+node_colors = [loader_colors[patches[i][1]] for i in range(len(patches))]
+
+X = [layout[node][0] for node in layout.keys()]
+Y = [layout[node][1] for node in layout.keys()]
+
+ax.scatter(X, Y, alpha=1, s=250, c=node_colors)
+
+# add a legend for the loader colors
+handles = [plt.Rectangle((0,0),1,1, color=loader_colors[key]) for key in loader_colors]
+labels = loader_colors.keys()
+ax.legend(handles, labels, loc='upper right', fontsize=70)
+
+edge_colors = ['gray' for u, v in graph.edges()]
+
+nx.draw_networkx_edges(graph, pos=layout, edge_color= edge_colors, alpha=0.5, arrows=False)
+
+plt.axis('off')
+plt.show()
+
+
+# %%
 
 graph = to_networkx(data)
 
