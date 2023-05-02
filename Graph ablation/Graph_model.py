@@ -255,7 +255,7 @@ class GCN_SAGPool(torch.nn.Module):
     
 # %%
 
-class GCN_topK(torch.nn.Module):
+class GCN_TopK(torch.nn.Module):
     
     """Graph Attention Network for full slide graph"""
     

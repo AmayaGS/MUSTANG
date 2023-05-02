@@ -126,7 +126,7 @@ CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAI
 # GRAPH
 # MULTI STAIN
 
-K = [1, 2, 3, 4, 5, 10, 20, 30, 50, 100]
+K = [1, 2, 3, 4, 5, 10, 20, 30]
 
 sys.stdout = open(r"C:\Users\Amaya\Documents\PhD\MangoMIL\K ablation\results\K_ablation.txt", 'w')
 #sys.stdout = open("/data/home/wpw030/MangoMIL/results/GAT_topK_multi_stain_results.txt", 'w')
@@ -141,7 +141,9 @@ if train_slides:
         #classification_weights = "/data/scratch/wpw030/RA/weights/Mango_K_" + k + "_multi_graph_classification.pth"
         
         embedding_net = VGG_embedding(embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-        graph_net = GAT_TopK(1024) 
+        graph_net = GAT_SAGPool(1024) 
+        
+        print(k, flush=True)
         
         if use_gpu:
             embedding_net.cuda()
@@ -150,9 +152,17 @@ if train_slides:
         loss_fn = nn.CrossEntropyLoss()
         optimizer_ft = optim.Adam(graph_net.parameters(), lr=0.0001)
 
-        _, graph_model, val_accuracy, val_auc, val_loss = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, k, embedding_vector_size, n_classes=n_classes, num_epochs=1)
+        best_acc, time = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, k, embedding_vector_size, n_classes=n_classes, num_epochs=1)
         
-        results.append([val_accuracy, val_auc, val_loss])
+        results.append([k, best_acc.detach().to('cpu').numpy(), time])
+        
+        del embedding_net, graph_net, best_acc
+        gc.collect()
+        
+    df = pd.DataFrame(results)
+    
+    df.to_csv(r'C:\Users\Amaya\Documents\PhD\MangoMIL\K ablation\results\acc_time_per_k.csv', sep=',', index=False)
+
     
         #torch.save(graph_model.state_dict(), classification_weights)
         

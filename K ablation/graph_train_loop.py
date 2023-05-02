@@ -495,9 +495,9 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             print('Sensitivity: ', sensitivity) 
             print('Specificity: ', specificity) 
 
-        if val_auc > best_auc:
+        if val_accuracy > best_auc:
             best_model_classification_wts = copy.deepcopy(graph_net.state_dict())
-            best_auc = val_auc
+            best_auc = val_accuracy
             
     elapsed_time = time.time() - since
     
@@ -505,4 +505,4 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
     print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
     graph_net.load_state_dict(best_model_classification_wts)
         
-    return embedding_net, graph_net, val_accuracy, val_auc, val_loss
+    return best_auc, elapsed_time
