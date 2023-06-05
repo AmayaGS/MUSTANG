@@ -322,3 +322,114 @@ class GCN_TopK(torch.nn.Module):
     
 # %%
 
+class GCN_model(torch.nn.Module):
+    
+    """GCN with global max pooling"""
+    
+    def __init__(self, dim_in):
+        
+        super().__init__()
+        
+        self.gat1 = GCNConv(dim_in, 512)
+        self.gat2 = GCNConv(512, 512)
+        self.gat3 = GCNConv(512, 512)
+        self.gat4 = GCNConv(512, 512)
+		
+        #self.topk4 = SAGPooling(512, pooling_ratio)
+        
+        self.lin1 = torch.nn.Linear(512, 512)
+        self.lin2 = torch.nn.Linear(512, 512 // 2)
+        self.lin3 = torch.nn.Linear(512 // 2, 2)
+
+    def forward(self, data):
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        x = self.gat1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+
+        x = self.gat3(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat4(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+		
+        #x, edge_index, _, batch, _, _= self.topk4(x, edge_index, None, batch)
+		#x = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        x = gmp(x, batch=batch)
+		       
+        x = self.lin1(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        x = self.lin2(x)
+        x = F.relu(x)
+        x_logits = self.lin3(x)
+        x_out = F.softmax(x_logits, dim=1)
+		
+        return x_logits, x_out
+	
+# %%
+
+class GAT_model(torch.nn.Module):
+    
+    """Graph Attention Network for full slide graph"""
+    
+    def __init__(self, dim_in, heads=1, pooling_ratio=0.5):
+        
+        super().__init__()
+        
+        self.pooling_ratio = pooling_ratio
+        self.heads = heads
+        
+        self.gat1 = GATv2Conv(dim_in, 512, heads=self.heads, concat=False)
+        self.gat2 = GATv2Conv(512, 512, heads=self.heads, concat=False)
+        self.gat3 = GATv2Conv(512, 512, heads=self.heads, concat=False)
+        self.gat4 = GATv2Conv(512, 512, heads=self.heads, concat=False)
+		
+        self.topk4 = SAGPooling(512, pooling_ratio)
+        
+        self.lin1 = torch.nn.Linear(512, 512)
+        self.lin2 = torch.nn.Linear(512, 512 // 2)
+        self.lin3 = torch.nn.Linear(512 // 2, 2)
+
+
+    def forward(self, data):
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        x = self.gat1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+
+        x = self.gat3(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        
+        x = self.gat4(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+		
+        #x, edge_index, _, batch, _, _= self.topk4(x, edge_index, None, batch)
+        #x = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        x = gmp(x, batch=batch)
+        
+        x = self.lin1(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.2, training=self.training)
+        x = self.lin2(x)
+        x = F.relu(x)
+        x_logits = self.lin3(x)
+        x_out = F.softmax(x_logits, dim=1)
+
+        return x_logits, x_out

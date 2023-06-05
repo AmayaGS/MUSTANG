@@ -44,7 +44,7 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
     since = time.time()
     #best_model_embedding_wts = copy.deepcopy(embedding_net.state_dict())
     #best_model_classification_wts = copy.deepcopy(classification_net.state_dict())
-    best_auc = 0.
+    best_acc = 0.
 
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -244,9 +244,9 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
             print('Sensitivity: ', sensitivity) 
             print('Specificity: ', specificity) 
 
-        if val_auc > best_auc:
+        if val_accuracy > best_acc:
             best_model_classification_wts = copy.deepcopy(graph_net.state_dict())
-            best_auc = val_auc
+            best_acc = val_accuracy
             
     elapsed_time = time.time() - since
     
@@ -265,7 +265,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
     since = time.time()
     #best_model_embedding_wts = copy.deepcopy(embedding_net.state_dict())
     #best_model_classification_wts = copy.deepcopy(classification_net.state_dict())
-    best_auc = 0.
+    best_acc = 0.
 
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs), flush=True)
@@ -358,9 +358,9 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             train_acc += torch.sum(Y_hat == label.data)
             train_count += 1
         
-            if (batch_idx + 1) % 20 == 0:
-                print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
-                    'label: {}, bag_size: {}'.format(label.item(), patient_embedding.size(0)))
+            #if (batch_idx + 1) % 20 == 0:
+            #    print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
+            #        'label: {}, bag_size: {}'.format(label.item(), patient_embedding.size(0)))
             
             # backward pass
             loss.backward()
@@ -495,10 +495,10 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             print('Sensitivity: ', sensitivity) 
             print('Specificity: ', specificity) 
 
-        if val_auc > best_auc:
+        if val_accuracy > best_acc:
             best_model_classification_wts = copy.deepcopy(graph_net.state_dict())
-            best_auc = val_auc
-            
+            best_acc = val_accuracy
+            s
     elapsed_time = time.time() - since
     
     print()

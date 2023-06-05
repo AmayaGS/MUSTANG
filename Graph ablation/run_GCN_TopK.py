@@ -29,7 +29,7 @@ from training_loops import train_att_slides, train_att_multi_slide
 from graph_train_loop import train_graph_slides, train_graph_multi_stain
 
 from clam_model import VGG_embedding, GatedAttention
-from Graph_model import GAT_TopK, GAT_SAGPool, GCN_topK, GCN_SAGPool
+from Graph_model import GAT_TopK, GAT_SAGPool, GCN_TopK, GCN_SAGPool, GCN_model, GAT_model
 
 from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
 
@@ -107,7 +107,8 @@ else:
 
 # %%
 
-file = "/data/scratch/wpw030/RA/df_all_stains_patches_labels_HPC.csv"
+file = r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"
+#file = "/data/scratch/wpw030/RA/df_all_stains_patches_labels_HPC.csv"
 df = pd.read_csv(file, header=0)  
 df = df.dropna(subset=[label])
 
@@ -126,14 +127,14 @@ CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAI
 # GRAPH
 # MULTI STAIN
 
-sys.stdout = open("/data/home/wpw030/MangoMIL/results/GCN_topK_multi_stain_results.txt", 'w')
+#sys.stdout = open("/data/home/wpw030/MangoMIL/results/GCN_topK_multi_stain_results.txt", 'w')
 
 if train_slides:
         
-    classification_weights = "/data/scratch/wpw030/RA/weights/GCN_topK_multi_graph_classification.pth"
+    #classification_weights = "/data/scratch/wpw030/RA/weights/GCN_topK_multi_graph_classification.pth"
     
     embedding_net = VGG_embedding(embedding_vector_size=embedding_vector_size, n_classes=n_classes)
-    graph_net = GCN_topK(1024) 
+    graph_net = GAT_model(1024) 
     
     if use_gpu:
         embedding_net.cuda()
@@ -142,8 +143,8 @@ if train_slides:
     loss_fn = nn.CrossEntropyLoss()
     optimizer_ft = optim.Adam(graph_net.parameters(), lr=0.0001)
 
-    _, graph_model = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size, n_classes=n_classes, num_epochs=50)
+    _, graph_model = train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer_ft, embedding_vector_size=embedding_vector_size, n_classes=n_classes, num_epochs=1)
     
-    torch.save(graph_model.state_dict(), classification_weights)
+#    torch.save(graph_model.state_dict(), classification_weights)
         
-sys.stdout.close()  
+#sys.stdout.close()  

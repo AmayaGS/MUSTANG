@@ -260,7 +260,7 @@ def train_graph_slides(embedding_net, graph_net, patients_TRAIN, patients_TEST, 
 # %%
 
 
-def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs=1):
+def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAIN, CD138_patients_TEST, CD68_patients_TEST, CD20_patients_TEST, HE_patients_TEST, train_ids, test_ids, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs):
     
     since = time.time()
     #best_model_embedding_wts = copy.deepcopy(embedding_net.state_dict())
@@ -300,6 +300,7 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
 
         embedding_net.eval()
         graph_net.train(True)
+        len_embedding = []
         
         for batch_idx, loader in enumerate(zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())):
 
@@ -342,12 +343,15 @@ def train_graph_multi_stain(embedding_net, graph_net, CD138_patients_TRAIN, CD68
             try:
                 
                 patient_embedding = torch.cat(patient_embedding)
+               
                 
             except RuntimeError:
                 continue
+			
+            print(len(patient_embedding), flush=True)
             
             knn_graph = kneighbors_graph(patient_embedding, K, mode='connectivity', include_self=False)
-            edge_index = torch.tensor(knn_graph.nonzero(), dtype=torch.long)
+            edge_index = torch.tensor(np.array(knn_graph.nonzero()), dtype=torch.long)
             data = Data(x=patient_embedding, edge_index=edge_index)
             
             logits, Y_prob = graph_net(data.cuda())

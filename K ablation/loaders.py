@@ -36,8 +36,8 @@ class Loaders:
         
         if subset:
             
-            train_subset_ids = random.sample(train_ids, 10)
-            test_subset_ids = random.sample(test_ids,5)
+            train_subset_ids = random.sample(train_ids, 20)
+            test_subset_ids = random.sample(test_ids, 10)
             
             return file_ids, train_subset_ids, test_subset_ids
         

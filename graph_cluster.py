@@ -29,13 +29,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import torch_geometric.utils
 from torchvision import transforms
 from torch_geometric.data import Data
-from torch_geometric.utils import to_networkx
+from torch_geometric.utils import to_networkx, assortativity, to_undirected
 
 from auxiliary_functions import Accuracy_Logger
 from clam_model import VGG_embedding, GatedAttention
-from Graph_model import GAT_TopK
+from Graph_model import GAT_TopK, GAT_SAGPool_flops, GAT_SAGPool
 from loaders import Loaders
 from graph_train_loop import train_graph_multi_stain
 from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
@@ -76,7 +77,7 @@ test_transform = transforms.Compose([
 
 # %%
 
-torch.manual_seed(42)
+torch.manual_seed(2)
 train_fraction = .7
 random_state = 2
 
@@ -131,13 +132,50 @@ CD138_patients_TRAIN, CD68_patients_TRAIN, CD20_patients_TRAIN, HE_patients_TRAI
 embedding_net = VGG_embedding(embedding_vector_size=embedding_vector_size, n_classes=n_classes)
 embedding_net.cuda()
 
+# %%
+
+import thop
+from thop import profile
+from torchsummary import summary as torch_summary
+import ptflops
+from ptflops import get_model_complexity_info
+
+# %%
+
+graph_net = GAT_SAGPool_flops(1024, heads=1)
+graph_net.cuda()
+
+input_data = torch.randn(2000, 1024)
+
+macs, params = profile(graph_net, (input_data, ))
+torch_summary(graph_net, input_data)
+
+
+# %%
+
+clam_net = GatedAttention_flops(1024)
+clam_net
+
+input_data = torch.randn(2000, 1024)
+input_data
+
+torch_summary(clam_net, input_data)
+macs, params = profile(clam_net.cuda(), (input_data.cuda(), ))
+
 #%%
 
-loader = zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())
+graph_macs, graph_params = get_model_complexity_info(graph_net.cuda(), (2000, 1024))
+macs, params = get_model_complexity_info(clam_net.cuda(), (2000, 1024))
+
+
+# %%
+
+train_loader = zip(CD138_patients_TRAIN.values(), CD68_patients_TRAIN.values(), CD20_patients_TRAIN.values(), HE_patients_TRAIN.values())
+test_loader = zip(CD138_patients_TEST.values(), CD68_patients_TEST.values(), CD20_patients_TEST.values(), HE_patients_TEST.values())
 
 #%%
 
-data = next(zip(loader))
+data = next(zip(train_loader))
 
 # %%
 embedding_net.eval()
@@ -145,56 +183,115 @@ embedding_net.eval()
 patient_embedding = [] 
 patches = []
 
-for i, slides in enumerate(data):
-                
-# 	stain = slides.dataset.stain[0]
-# 	patient = slides.dataset.filepaths[0].split("\\")[-1].split("_")[0]
-                
-# 	print("\rStain {}/{} - {} - {}".format(i, len(data), stain, patient), end='', flush=True)
-
-	for slide in slides:
-		
-		slide_embedding = []
-		
-		for patch in slide:
-		
-			inputs, label = patch
+for data in train_loader:
+	
+	for i, slides in enumerate(data):
+	                
+	# 	stain = slides.dataset.stain[0]
+	# 	patient = slides.dataset.filepaths[0].split("\\")[-1].split("_")[0]
+	                
+	# 	print("\rStain {}/{} - {} - {}".format(i, len(data), stain, patient), end='', flush=True)
+	
+		for slide in slides:
 			
-			patches.append([inputs, slide.dataset.stain[0]])
-	            
-			if use_gpu:
-				inputs, label = inputs.cuda(), label.cuda()
-			else:
-				inputs, label = inputs, label
-	            
-			embedding = embedding_net(inputs)
-	            
-			embedding = embedding.detach().to('cpu')
-			embedding = embedding.squeeze(0)
-			slide_embedding.append(embedding)
-                    
-		try:
+			slide_embedding = []
+			
+			for patch in slide:
+			
+				inputs = patch
+				
+				#patches.append([inputs, slide.dataset.stain[0]])
+		            
+				if use_gpu:
+					inputs = inputs.cuda()
+				else:
+					inputs = inputs
+		            
+				embedding = embedding_net(inputs)
+		            
+				embedding = embedding.detach().to('cpu')
+				embedding = embedding.squeeze(0)
+				slide_embedding.append(embedding)
+	                    
+			try:
+		                
+				slide_embedding = torch.stack(slide_embedding)
+				patient_embedding.append(slide_embedding)
+		                
+			except RuntimeError:
+				continue
 	                
-			slide_embedding = torch.stack(slide_embedding)
-			patient_embedding.append(slide_embedding)
+	# try:
+	# 	patient_embedding = torch.cat(patient_embedding)            
+	# except RuntimeError: 
+	#     continue
+	patient_embedding = torch.cat(patient_embedding) 
+	
+# %%
+
+embedding_net.eval()
+        
+#patient_embedding = [] 
+len_embedding = []
+patches = []
+
+for data in train_loader:
+	print(data)
+	patient_embedding = [] 
+	
+	for i, slides in enumerate(data):
+		print(slides)
+	
+		for slide in slides:
+			
+			slide_embedding = []
+			
+			for patch in slide:
+				print(patch)
+			
+				inputs, label = patch
+				
+				patches.append([inputs, slide.dataset.stain[0]])
+		            
+				if use_gpu:
+					inputs, label = inputs.cuda(), label.cuda()
+				else:
+					inputs, label = inputs, label
+		            
+				embedding = embedding_net(inputs)
+		            
+				embedding = embedding.detach().to('cpu')
+				embedding = embedding.squeeze(0)
+				slide_embedding.append(embedding)
+	                    
+			try:
+		                
+				slide_embedding = torch.stack(slide_embedding)
+				patient_embedding.append(slide_embedding)
+		                
+			except RuntimeError:
+				continue
 	                
-		except RuntimeError:
-			continue
-                
-# try:
-# 	patient_embedding = torch.cat(patient_embedding)            
-# except RuntimeError: 
-#     continue
-patient_embedding = torch.cat(patient_embedding) 
+	try:
+		patient_embedding = torch.cat(patient_embedding)
+		len_embedding.append(len(patient_embedding))      
+	except RuntimeError: 
+	    continue
+	#patient_embedding = torch.cat(patient_embedding) 
+	
 
 # %%    
        
-knn_graph = kneighbors_graph(patient_embedding, 5, mode='connectivity', include_self=False)
+knn_graph = kneighbors_graph(patient_embedding, 2000, mode='connectivity', include_self=False)
 edge_index = torch.tensor(np.array(knn_graph.nonzero()),dtype=torch.long)
 
 # %%
 
 graph_model = Data(x=patient_embedding, edge_index=edge_index)
+
+# %%
+
+summary(graph_net, graph_model)
 		
 #%%
 
@@ -251,7 +348,7 @@ plt.show()
 
 #%%
 
-loader_colors = {'CD138': 'orange', 'CD68': 'red', 'CD20': 'blue', 'HE': 'purple'}
+loader_colors = {'CD138': 'springgreen', 'CD68': 'red', 'CD20': 'blue', 'HE': 'magenta'}
 
 graph = to_networkx(graph_model)
 
