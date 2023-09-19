@@ -1,7 +1,7 @@
 # MUSTANG
 Multi Stain Graph Attention Multiple Instance Learning
 
-<img src="pic_trulli.jpg" alt="Italian Trulli">
+<img src="model_v2.jpg" alt="MUSTANG pipeline">
 
 The MUSTANG pipeline is composed of:
 
