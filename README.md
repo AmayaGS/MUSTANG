@@ -1,5 +1,4 @@
-# MUSTANG
-Multi Stain Graph Attention Multiple Instance Learning
+# Multi Stain Graph Attention Multiple Instance Learning - MUSTANG
 
 --------------
 
