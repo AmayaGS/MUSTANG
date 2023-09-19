@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Created on Fri Feb 24 18:22:22 2023
 
@@ -110,6 +110,96 @@ class GAT_SAGPool(torch.nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
         x, edge_index, _, batch, _, _= self.topk3(x, edge_index, None, batch)
         x3 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        x = self.gat4(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk4(x, edge_index, None, batch)
+        x4 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        x = x1 + x2 + x3 + x4
+        
+        x = self.lin1(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.lin2(x)
+        x = F.relu(x)
+        x_logits = self.lin3(x)
+        x_out = F.softmax(x_logits, dim=1)
+
+        return x_logits, x_out
+    
+# %%
+
+class GAT_SAGPool_rewire(torch.nn.Module):
+    
+    """Graph Attention Network for full slide graph"""
+    
+    def __init__(self, dim_in, heads=1, pooling_ratio=0.5, dropout=0.2):
+        
+        super().__init__()
+        
+        self.pooling_ratio = pooling_ratio
+        self.heads = heads
+        self.dropout = dropout
+        
+        self.gat1 = GATv2Conv(dim_in, 512, heads=self.heads, concat=False)
+        self.gat2 = GATv2Conv(512, 512, heads=self.heads, concat=False)
+        self.gat3 = GATv2Conv(512, 512, heads=self.heads, concat=False)
+        self.gat4 = GATv2Conv(512, 512, heads=self.heads, concat=False)
+                
+        self.topk1 = SAGPooling(512, pooling_ratio)
+        self.topk2 = SAGPooling(512, pooling_ratio)
+        self.topk3 = SAGPooling(512, pooling_ratio)
+        self.topk4 = SAGPooling(512, pooling_ratio)
+        
+        self.lin1 = torch.nn.Linear(512 * 2, 512)
+        self.lin2 = torch.nn.Linear(512, 512 // 2)
+        self.lin3 = torch.nn.Linear(512 // 2, 2)
+
+
+    def forward(self, data):
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        x = self.gat1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk1(x, edge_index, None, batch)
+        x1 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        knn_graph = kneighbors_graph(x.detach().to('cpu').numpy(), 5, mode='connectivity', include_self=False)
+        edge_index = torch.tensor(np.array(knn_graph.nonzero()), dtype=torch.long)
+        data = Data(x=x, edge_index=edge_index)
+        data.cuda()
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        x = self.gat2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk2(x, edge_index, None, batch)
+        x2 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        knn_graph = kneighbors_graph(x.detach().to('cpu').numpy(), 5, mode='connectivity', include_self=False)
+        edge_index = torch.tensor(np.array(knn_graph.nonzero()), dtype=torch.long)
+        data = Data(x=x, edge_index=edge_index)
+        data.cuda()
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+
+        x = self.gat3(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x, edge_index, _, batch, _, _= self.topk3(x, edge_index, None, batch)
+        x3 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
+        
+        knn_graph = kneighbors_graph(x.detach().to('cpu').numpy(), 5, mode='connectivity', include_self=False)
+        edge_index = torch.tensor(np.array(knn_graph.nonzero()), dtype=torch.long)
+        data = Data(x=x, edge_index=edge_index)
+        data.cuda()
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
         
         x = self.gat4(x, edge_index)
         x = F.relu(x)

@@ -29,39 +29,38 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 plt.ion()  
 
 
-def auc_plot(labels, prob, test_auc):
+def auc_plot(labels, prob):
 
     # AUC
     
     fpr, tpr, _ = roc_curve(labels, prob)
-    plt.figure(figsize=(5,5))
+    plt.figure(figsize=(10,10))
     plt.plot(fpr, tpr, color='r')
     plt.plot([0, 1], [0, 1], color = 'black', linestyle = '--')
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.xlabel('False Positive Rate', size=15)
-    plt.ylabel('True Positive Rate', size=15)
-    plt.title('AUC = %0.2f' % test_auc, size=20)
-    plt.text(0.3, 0.0, 'Sensitivity = 0.90\nSpecificity = 0.86', fontsize = 20)
-    plt.show()
+    plt.xlabel('False Positive Rate', size=18)
+    plt.ylabel('True Positive Rate', size=18)
+    #plt.title('AUC = %0.2f' % test_auc, size=20)
+    #plt.text(0.3, 0.0, 'Sensitivity = 0.90\nSpecificity = 0.86', fontsize = 20)
+    plt.savefig('auroc.png')
 
 
-def pr_plot(labels, prob, sensitivity, specificity):
+def pr_plot(labels, prob):
     
     # PR
     
     precision, recall, thresholds = precision_recall_curve(labels, prob)
     auc_precision_recall = auc(recall, precision)
-    plt.figure(figsize=(5,5))
-    plt.plot(recall, precision, color='darkblue', label='Sensitivity = %0.2f\nSpecificity = %0.2f' % (sensitivity, specificity))
+    plt.figure(figsize=(10,10))
+    plt.plot(recall, precision, color='darkblue')
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title('Average Precision = %0.2f' % auc_precision_recall, size=20)
-    plt.ylabel('Precision', size=15)
-    plt.xlabel('Recall', size=15)
+    #plt.title('Average Precision = %0.2f' % auc_precision_recall, size=20)
+    plt.ylabel('Precision', size=18)
+    plt.xlabel('Recall', size=18)
     plt.legend(loc='lower left', prop={'size': 19})
-    plt.show()
-
+    plt.savefig('prc.png')
 
 
 def plot_confusion_matrix(cm,
