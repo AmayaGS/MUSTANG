@@ -12,7 +12,7 @@ from PIL import Image
 from PIL import ImageFile
 from matplotlib import pyplot as plt
 
-import json
+import pickle
 
 import torch
 import torch.nn as nn
@@ -130,23 +130,26 @@ if creating_knng:
     test_graph_dict = create_graphs(embedding_net, test_slides, k=5, mode='connectivity', include_self=False)
 
     # save k-NNG with VGG patch embedddings for future use
-    for graph_dicts in (train_graph_dict, test_graph_dict):
-        for graph_dict in graph_dicts:
-            print("Started saving" + graph_dict + "to file")
-            with open(graph_dict + ".txt", "w") as file:
-                json.dump(graph_dict, file)  # encode dict into JSON
-            print("Done writing dict into .txt file")
+    print("Started saving train_graph_dict to file")
+    with open("train_graph_dict.pkl", "wb") as file:
+        pickle.dump(train_graph_dict, file)  # encode dict into JSON
+        print("Done writing dict into pickle file")
+        
+    print("Started saving test_graph_dict to file")
+    with open("test_graph_dict.pkl", "wb") as file:
+        pickle.dump(test_graph_dict, file)  
+        print("Done writing dict into .pickle file")
 
 
-if not creating_knng:
+if creating_knng==False:
 
-    with open("train_graph_dict.txt", "r") as train_file:
+    with open("train_graph_dict.txt", "rb") as train_file:
     # Load the dictionary from the file
-        train_graph_dict = json.load(train_file)
+        train_graph_dict = pickle.load(train_file)
 
-    with open("test_graph_dict.txt", "r") as test_file:
+    with open("test_graph_dict.txt", "rb") as test_file:
     # Load the dictionary from the file
-        test_graph_dict = json.load(test_file)
+        test_graph_dict = pickle.load(test_file)
 
 # %%
 
@@ -154,18 +157,18 @@ if not creating_knng:
 
 #sys.stdout = open(PATH_output_file + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".txt", 'a')
 
-classification_weights = PATH_output_weights + "\best" + str_hd + ".pth"
+#classification_weights = PATH_output_weights + "\best" + str_hd + ".pth"
 
 graph_net = GAT_SAGPool(embedding_vector_size, heads=heads, pooling_ratio=pooling_ratio)
 loss_fn = nn.CrossEntropyLoss()
 optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
 
-print(state, heads, pooling_ratio, learning_rate, flush=True)
+#print(state, heads, pooling_ratio, learning_rate, flush=True)
 
 if use_gpu:
      graph_net.cuda()
 
-val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(embedding_net, graph_net, train_loader, test_loader, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, random_seed=str_random, heads=str_hd, pooling_ratio=str_pr, learning_rate=str_lr, checkpoints=PATH_checkpoints)
+val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_dict, test_graph_dict, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, random_seed=str_state, heads=str_hd, pooling_ratio=str_pr, learning_rate=str_lr, checkpoints=PATH_checkpoints)
 
 # torch.save(graph_weights.state_dict(), classification_weights)
 
