@@ -35,42 +35,39 @@ gc.enable()
 
 
 def train_graph_multi_stain(embedding_net, graph_net, train_loader, test_loader, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs=1, training=True, testing=True, random_seed=str(2), heads=str(1), pooling_ratio=str(0.5), learning_rate=str(0.0001), checkpoints="PATH_checkpoints"):
-    
+
+
     since = time.time()
     best_acc = 0.
     best_AUC = 0.
-    
+
     val_loss_list = []
     val_accuracy_list = []
     val_auc_list = []
-    
+
     for epoch in range(num_epochs):
-        
+
         ##################################
         # TRAIN
-        
-        acc_logger = Accuracy_Logger(n_classes=n_classes)
-        train_acc = 0 
-        train_count = 0
-    
         if training:
-        
+            
+            acc_logger = Accuracy_Logger(n_classes=n_classes)
+            train_acc = 0 
+            train_count = 0
+            graph_net.train()
+
             print("Epoch {}/{}".format(epoch, num_epochs), flush=True)
             print('-' * 10)
-    
-            embedding_net.eval()
-            graph_net.train(True)
-            
+
             for batch_idx, graph_loader in train_loader:
-                
+
                 data, label = graph_loader
-                
+
                 if use_gpu:
                     data, label = data.cuda(), label.cuda()
                 else:
                     data, label = data, label
-                
-                
+
                 logits, Y_prob = graph_net(data)
                 Y_hat = Y_prob.argmax(dim=1)
                 acc_logger.log(Y_hat, label)
@@ -83,13 +80,11 @@ def train_graph_multi_stain(embedding_net, graph_net, train_loader, test_loader,
                     print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
                         'label: {}, bag_size: {}'.format(label.item(), data.size(0))) # CHECK HERE
                 
-                # backward pass
                 loss.backward()
-                # step
                 optimizer.step()
                 optimizer.zero_grad()
                 
-                del data, knn_graph, edge_index, slide_embedding, patient_embedding, logits, Y_prob, Y_hat
+                del data, logits, Y_prob, Y_hat
                 gc.collect()
                 
             total_loss = loss.item() / train_count
@@ -108,7 +103,6 @@ def train_graph_multi_stain(embedding_net, graph_net, train_loader, test_loader,
         
         if testing:
         
-            embedding_net.eval()
             graph_net.eval()
             
             val_acc_logger = Accuracy_Logger(n_classes)
