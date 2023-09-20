@@ -34,7 +34,7 @@ gc.enable()
 # %%
 
 
-def train_graph_multi_stain(embedding_net, graph_net, train_loader, test_loader, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs=1, training=True, testing=True, random_seed=str(2), heads=str(1), pooling_ratio=str(0.5), learning_rate=str(0.0001), checkpoints="PATH_checkpoints"):
+def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs=1, training=True, testing=True, random_seed=str(2), heads=str(1), pooling_ratio=str(0.5), learning_rate=str(0.0001), checkpoints="PATH_checkpoints"):
 
 
     since = time.time()
@@ -113,48 +113,16 @@ def train_graph_multi_stain(embedding_net, graph_net, train_loader, test_loader,
             prob = []
             labels = []
     
-            for batch_idx, loader in enumerate(zip(CD138_patients_TEST.values(), CD68_patients_TEST.values(), CD20_patients_TEST.values(), HE_patients_TEST.values())):
-    
-                patient_embedding = []
-                
-                for i, data in enumerate(loader):
-                
-                    slide_embedding = []
+            for batch_idx, graph_loader in train_loader:
+
+                data, label = graph_loader
+
+                if use_gpu:
+                    data, label = data.cuda(), label.cuda()
+                else:
+                    data, label = data, label
                     
-                    for patch in data:
-                        
-                        inputs, label = patch
-                
-                        if use_gpu:
-                            inputs, label = inputs.cuda(), label.cuda()
-                        else:
-                            inputs, label = inputs, label
-                
-                        embedding = embedding_net(inputs)
-                
-                        embedding = embedding.detach().to('cpu')
-                        embedding = embedding.squeeze(0)
-                        slide_embedding.append(embedding)
-                    
-                    try:
-                        
-                        slide_embedding = torch.stack(slide_embedding)
-                        patient_embedding.append(slide_embedding)
-                    
-                    except RuntimeError:
-                        continue            
-                try:
-                    
-                    patient_embedding = torch.cat(patient_embedding)
-                    
-                except RuntimeError:
-                    continue
-                
-                knn_graph = kneighbors_graph(patient_embedding, K, mode='connectivity', include_self=False)
-                edge_index = torch.tensor(np.array(knn_graph.nonzero()), dtype=torch.long)
-                data = Data(x=patient_embedding, edge_index=edge_index)
-                
-                logits, Y_prob = graph_net(data.cuda())
+                logits, Y_prob = graph_net(data)
                 Y_hat = Y_prob.argmax(dim=1)
                 val_acc_logger.log(Y_hat, label)
                 
