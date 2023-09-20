@@ -7,6 +7,7 @@ Created on Thu Nov 17 11:52:02 2022
 
 import os, os.path
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+import numpy as np
 import pandas as pd
 from PIL import Image
 from PIL import ImageFile
@@ -74,7 +75,7 @@ test_transform = transforms.Compose([
 
 # parameters 
 
-state = 2
+state = 42
 torch.manual_seed(state)
 train_fraction = .7
 
@@ -90,7 +91,7 @@ training = True
 testing = True
 
 embedding_vector_size = 1024
-learning_rate = 0.00001
+learning_rate = 0.0001
 
 str_lr = str(learning_rate)
 str_state = str(state)
@@ -108,7 +109,7 @@ n_classes=2
 
 # %%
 
-df = pd.read_csv(PATH_patches, header=0)  
+df = pd.read_csv(PATH_patches, header=0)
 df = df.dropna(subset=[label])
     
 # %%
@@ -168,15 +169,15 @@ optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
 if use_gpu:
      graph_net.cuda()
 
-val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_dict, test_graph_dict, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, random_seed=str_state, heads=str_hd, pooling_ratio=str_pr, learning_rate=str_lr, checkpoints=PATH_checkpoints)
+val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_dict, test_graph_dict, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, random_seed=str_state, heads=str_hd, pooling_ratio=str_pr, learning_rate=str_lr, checkpoint=False, checkpoints=PATH_checkpoints)
 
 # torch.save(graph_weights.state_dict(), classification_weights)
 
- #print(test_loss)
- #print(test_accuracy)
+#print(test_loss)
+#print(test_accuracy)
 
- #np.savetxt("/data/home/wpw030/MangoMIL/results/test_loss_graph_" +  str_random + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", test_loss)
- #np.savetxt("/data/home/wpw030/MangoMIL/results/test_accuracy_graph_" +  str_random + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", test_accuracy)
+np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_graph_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
+np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_graph_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)
 
- #sys.stdout.close()
+#sys.stdout.close()
 

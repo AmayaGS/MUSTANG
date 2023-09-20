@@ -34,7 +34,7 @@ gc.enable()
 # %%
 
 
-def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs=1, training=True, testing=True, random_seed=str(2), heads=str(1), pooling_ratio=str(0.5), learning_rate=str(0.0001), checkpoints="PATH_checkpoints"):
+def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optimizer, K, embedding_vector_size, n_classes, num_epochs=1, training=True, testing=True, random_seed=str(2), heads=str(1), pooling_ratio=str(0.5), learning_rate=str(0.0001), checkpoint=True, checkpoints="PATH_checkpoints"):
 
 
     since = time.time()
@@ -185,14 +185,18 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
                 if val_auc >= best_AUC:
                     best_acc = val_accuracy
                     best_AUC = val_auc
-                    checkpoint_weights = checkpoints + "\\" + random_seed + "_" + heads + "_" + pooling_ratio + "_" + learning_rate + "_checkpoint_" + str(epoch) + ".pth"    
-                    torch.save(graph_net.state_dict(), checkpoint_weights)
+                    
+                    if checkpoint:
+                        checkpoint_weights = checkpoints + "\\" + random_seed + "_" + heads + "_" + pooling_ratio + "_" + learning_rate + "_checkpoint_" + str(epoch) + ".pth"    
+                        torch.save(graph_net.state_dict(), checkpoint_weights)
                        
     elapsed_time = time.time() - since
       
     print()
     print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
-    graph_net.load_state_dict(torch.load(checkpoint_weights), strict=True)
+    
+    if checkpoint:
+        graph_net.load_state_dict(torch.load(checkpoint_weights), strict=True)
         
     return val_loss_list, val_accuracy_list, val_auc_list, graph_net
     
