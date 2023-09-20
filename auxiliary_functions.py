@@ -6,31 +6,6 @@ Created on Tue Jan 24 14:03:24 2023
 
 """
 
-import numpy as np
-from PIL import Image
-from torch.utils.data import Dataset
-
-
-class histoDataset(Dataset):
-
-    def __init__(self, df, transform, label):
-        
-        self.transform = transform 
-        self.labels = df[label].astype(int).tolist()
-        self.filepaths = df['Location'].tolist()
-        self.stain = df['Stain'].tolist()
-
-    def __len__(self):
-        return len(self.labels)
-
-    def __getitem__(self, idx):
-
-        image = Image.open(self.filepaths[idx])
-        image_tensor = self.transform(image)
-        image_label = self.labels[idx]
-            
-        return image_tensor, image_label     
-    
 
 class Accuracy_Logger(object):
     
