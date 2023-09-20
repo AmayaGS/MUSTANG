@@ -59,7 +59,7 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
             print("Epoch {}/{}".format(epoch, num_epochs), flush=True)
             print('-' * 10)
 
-            for batch_idx,(patient_ID, graph_object) in enumerate(train_loader.items()):
+            for batch_idx, (patient_ID, graph_object) in enumerate(train_loader.items()):
 
                 data, label = graph_object
 
@@ -76,9 +76,9 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
                 train_acc += torch.sum(Y_hat == label.data)
                 train_count += 1
 
-                if (batch_idx + 1) % 20 == 0:
-                    print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
-                        'label: {}, bag_size: {}'.format(label.item(), data.size(0))) # CHECK HERE
+                #if (batch_idx + 1) % 20 == 0:
+                #    print('- batch {}, loss: {:.4f}, '.format(batch_idx, loss) + 
+                #        'label: {}, bag_size: {}'.format(label.item(), data.size(0))) # CHECK HERE
                 
                 loss.backward()
                 optimizer.step()
@@ -96,7 +96,6 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
                 acc, correct, count = acc_logger.get_summary(i)
                 print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count), flush=True)
                       
-            graph_net.train(False)
         
         ################################
         # TEST
@@ -116,11 +115,12 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
             for batch_idx, (patient_ID, graph_object) in enumerate(test_loader.items()):
 
                 data, label = graph_object
-
-                if use_gpu:
-                    data, label = data.cuda(), label.cuda()
-                else:
-                    data, label = data, label
+                
+                with torch.no_grad():
+                    if use_gpu:
+                        data, label = data.cuda(), label.cuda()
+                    else:
+                        data, label = data, label
                     
                 logits, Y_prob = graph_net(data)
                 Y_hat = Y_prob.argmax(dim=1)
@@ -135,7 +135,7 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
                 prob.append(Y_prob.detach().to('cpu').numpy())
                 labels.append(label.item())
                 
-                del data, knn_graph, edge_index, slide_embedding, patient_embedding, logits, Y_prob, Y_hat
+                del data, logits, Y_prob, Y_hat
                 gc.collect()
                        
             val_loss /= val_count
@@ -163,16 +163,16 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
             
             val_auc_list.append(val_auc)
             
-            clsf_report = pd.DataFrame(classification_report(labels, np.argmax(prob, axis=1), output_dict=True, zero_division=1)).transpose()
+            #clsf_report = pd.DataFrame(classification_report(labels, np.argmax(prob, axis=1), output_dict=True, zero_division=1)).transpose()
             conf_matrix = confusion_matrix(labels, np.argmax(prob, axis=1))
                         
             print('\nVal Set, val_loss: {:.4f}, AUC: {:.4f}, Accuracy: {:.4f}'.format(val_loss, val_auc, val_accuracy), flush=True)
         
-            for i in range(n_classes):
-                acc, correct, count = val_acc_logger.get_summary(i)
-                print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count))
+            #for i in range(n_classes):
+            #    acc, correct, count = val_acc_logger.get_summary(i)
+            #    print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count))
                 
-            print(clsf_report)
+            #print(clsf_report)
             print(conf_matrix)
             
             if n_classes == 2:
@@ -185,7 +185,7 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
                 if val_auc >= best_AUC:
                     best_acc = val_accuracy
                     best_AUC = val_auc
-                    checkpoint_weights = checkpoints + random_seed + "_" + heads + "_" + pooling_ratio + "_" + learning_rate + "_checkpoint_" + str(epoch) + ".pth"    
+                    checkpoint_weights = checkpoints + "\\" + random_seed + "_" + heads + "_" + pooling_ratio + "_" + learning_rate + "_checkpoint_" + str(epoch) + ".pth"    
                     torch.save(graph_net.state_dict(), checkpoint_weights)
                        
     elapsed_time = time.time() - since

@@ -46,7 +46,7 @@ gc.enable()
 PATH_patches =  r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"  # csv with file location is foud here 
 PATH_output_file = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\results\GRAPH_multi_seed_" # keep output results here
 PATH_output_weights = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\weights"  # keep output weights here 
-PATH_checkpoints = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\weights\checkpoints" # keep checkpoints here 
+PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights" # keep checkpoints here 
 
 # %%
 
@@ -90,7 +90,7 @@ training = True
 testing = True
 
 embedding_vector_size = 1024
-learning_rate = 0.0001
+learning_rate = 0.00001
 
 str_lr = str(learning_rate)
 str_state = str(state)
@@ -143,11 +143,11 @@ if creating_knng:
 
 if creating_knng==False:
 
-    with open("train_graph_dict.txt", "rb") as train_file:
+    with open("train_graph_dict.pkl", "rb") as train_file:
     # Load the dictionary from the file
         train_graph_dict = pickle.load(train_file)
 
-    with open("test_graph_dict.txt", "rb") as test_file:
+    with open("test_graph_dict.pkl", "rb") as test_file:
     # Load the dictionary from the file
         test_graph_dict = pickle.load(test_file)
 

@@ -5,30 +5,14 @@ Created on Wed Sep 20 17:14:46 2023
 @author: AmayaGS
 """
 
-import time
 import os, os.path
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-
-import copy
-from collections import defaultdict
-
-import pandas as pd
 import numpy as np
 
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.metrics import roc_curve, roc_auc_score
-from sklearn.preprocessing import label_binarize
-from sklearn.metrics import auc as calc_auc
-
 import torch
-import torch.nn.functional as F
 
 from torch_geometric.data import Data
 from sklearn.neighbors import kneighbors_graph
-from torch_geometric.utils import to_networkx
-
-from auxiliary_functions import Accuracy_Logger
-from clam_model import VGG_embedding, GatedAttention
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
