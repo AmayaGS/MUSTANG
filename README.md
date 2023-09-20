@@ -8,6 +8,8 @@ Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles L
 
 <img src="model_v2.png" alt="MUSTANG pipeline">
 
+### I am currently updating the code and will provide a step by step explanation on how to run it. 
+
 The MUSTANG pipeline is composed of:
 
 • <b>A - Segmentation</b>: A automated segmentation step, where UNet is used to segment tissue areas on the WSIs. The user can use the trained weights provided on our GitHub repository or use their own.
