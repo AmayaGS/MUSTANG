@@ -5,6 +5,7 @@ Created on Fri Feb 24 18:22:22 2023
 @author: AmayaGS
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

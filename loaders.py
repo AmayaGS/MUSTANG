@@ -6,12 +6,10 @@ Created on Thu Feb  2 16:15:48 2023
 """
 
 import os, os.path
-import numpy as np
 from PIL import Image
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 import random
 import torch
-from collections import Counter
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
 
@@ -32,18 +30,18 @@ class histoDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        image = Image.open(self.filepaths[idx])
-        patient_id = self.patient_ID[idx]
-        filename = self.filename[idx]
-        stain = self.stain[idx]
-        image_tensor = self.transform(image)
-        image_label = self.labels[idx]
-            
-        return image_tensor, image_label, patient_id, filename, stain
+        try:
+            image = Image.open(self.filepaths[idx])
+            patient_id = self.patient_ID[idx]
+            filename = self.filename[idx]
+            stain = self.stain[idx]
+            image_tensor = self.transform(image)
+            image_label = self.labels[idx]
+            return image_tensor, image_label, patient_id, filename, stain
+        except FileNotFoundError:
+            return None
 
 class Loaders:
-    
-    #def __init__(self):
         
     def train_test_ids(self, df, train_fraction, random_state, patient_id, label, subset=False):
         
@@ -72,7 +70,7 @@ class Loaders:
         return df_train, df_test, train_subset, test_subset
 
 
-    def slides_dataloader(self, train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, label='Pathotype_binary', patient_id="Patient ID"):
+    def slides_dataloader(self, train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, collate, label='Pathotype_binary', patient_id="Patient ID"):
         
         # TRAIN dict
         train_subsets = {}
@@ -80,7 +78,7 @@ class Loaders:
             new_key = f'{file}'
             train_subset = histoDataset(train_sub[train_sub["Patient ID"] == file], train_transform, label=label)
 #            if len(train_subset) != 0:
-            train_subsets[new_key] = torch.utils.data.DataLoader(train_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False)
+            train_subsets[new_key] = torch.utils.data.DataLoader(train_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False, collate_fn=collate)
 
             
         # TEST dict
@@ -89,12 +87,7 @@ class Loaders:
             new_key = f'{file}'
             test_subset = histoDataset(test_sub[test_sub["Patient ID"] == file], test_transform, label=label)
 #            if len(test_subset) != 0:
-            test_subsets[new_key] = torch.utils.data.DataLoader(test_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False)
+            test_subsets[new_key] = torch.utils.data.DataLoader(test_subset, batch_size=slide_batch, shuffle=shuffle, num_workers=num_workers, drop_last=False, collate_fn=collate)
         
         return train_subsets, test_subsets
 
-
-    def collate_fn(batch):
-        batch = list(filter(lambda x: x is not None, batch))
-        return torch.utils.data.dataloader.default_collate(batch)
-            

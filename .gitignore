@@ -1,0 +1,13 @@
+
+WIP/
+CLAM/
+__pychache__/
+runners/
+desktop.ini
+*.pyc
+*.pkl
+*.csv
+*.txt
+*.pth
+klipartz.com.png
+pngegg.png

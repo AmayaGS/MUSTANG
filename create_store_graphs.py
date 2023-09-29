@@ -22,9 +22,10 @@ import gc
 gc.enable()
 
 
-def create_graphs(embedding_net, loader, k=5, mode='connectivity', include_self=False):
+def create_embeddings_graphs(embedding_net, loader, k=5, mode='connectivity', include_self=False):
 
     graph_dict = dict()
+    embedding_dict = dict()
 
     embedding_net.eval()
     with torch.no_grad():
@@ -34,6 +35,7 @@ def create_graphs(embedding_net, loader, k=5, mode='connectivity', include_self=
     
             for patch in slide_loader:
                 inputs, label, _, _, _ = patch
+                label = label[0].unsqueeze(0)
                 
                 if use_gpu:
                     inputs, label = inputs.cuda(), label.cuda()
@@ -42,18 +44,21 @@ def create_graphs(embedding_net, loader, k=5, mode='connectivity', include_self=
     
                 embedding = embedding_net(inputs)
                 embedding = embedding.to('cpu')
-                embedding = embedding.squeeze(0)
+                embedding = embedding.squeeze(0).squeeze(0)
                 patient_embedding.append(embedding)
     
             try:
-                patient_embedding = torch.stack(patient_embedding)
+                patient_embedding = torch.cat(patient_embedding)
             except RuntimeError:
                 continue
-    
+            
+            embedding_dict[patient_ID] = [patient_embedding.to('cpu'), label.to('cpu')]
+
             knn_graph = kneighbors_graph(patient_embedding, k, mode=mode, include_self=include_self)
             edge_index = torch.tensor(np.array(knn_graph.nonzero()), dtype=torch.long)
             data = Data(x=patient_embedding, edge_index=edge_index)
-            
+        
             graph_dict[patient_ID] = [data.to('cpu'), label.to('cpu')]
     
-    return graph_dict 
+    return graph_dict, embedding_dict
+

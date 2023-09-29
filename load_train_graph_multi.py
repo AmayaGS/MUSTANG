@@ -21,10 +21,11 @@ import torch.optim as optim
 from torchvision import transforms
 
 from loaders import Loaders
-from create_store_graphs import create_graphs
+from create_store_graphs import create_embeddings_graphs
 from graph_train_loop import train_graph_multi_stain, test_multi_stain_wsi
+from clam_train_loop import train_clam_multi_slide
 
-from Graph_model import VGG_embedding, GAT_SAGPool
+from models import VGG_embedding, GAT_SAGPool, GatedAttention
 
 #from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
 
@@ -44,10 +45,18 @@ gc.enable()
 
 # %%
 
-PATH_patches =  r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"  # csv with file location is foud here 
-PATH_output_file = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\results\GRAPH_multi_seed_" # keep output results here
-PATH_output_weights = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\weights"  # keep output weights here 
-PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights" # keep checkpoints here 
+dataset_name = "Sjogren"
+PATH_patches = r"C:\Users\Amaya\Documents\PhD\NECCESITY\Slides\qj_patch_labels.csv"
+PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights"
+#file = r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/df_all_"+ stain + "_patches_labels.csv"
+#df = pd.read_csv(PATH_patches, header=0)
+
+ # %%
+
+# PATH_patches =  r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"  # csv with file location is foud here 
+# PATH_output_file = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\results\GRAPH_multi_seed_" # keep output results here
+# PATH_output_weights = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\weights"  # keep output weights here 
+# PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights" # keep checkpoints here 
 
 # %%
 
@@ -80,15 +89,19 @@ torch.manual_seed(state)
 train_fraction = .7
 
 subset= False
-slide_batch = 1
+slide_batch = 10
 
 K=5
 
 num_workers = 0
 
 creating_knng = False
+creating_embedding = False
 training = True
 testing = True
+
+tain_graph = False
+train_clam = True
 
 embedding_vector_size = 1024
 learning_rate = 0.0001
@@ -102,9 +115,14 @@ heads = 2
 str_pr = str(pooling_ratio)
 str_hd = str(heads)
 
-label = 'Pathotype_binary'
+#label = 'Pathotype_binary'
+label = "Binary disease"
 patient_id = 'Patient ID'
 n_classes=2
+
+checkpoint_graph_name = PATH_checkpoints + "\\graph_" + str_state + "_" + str_hd + "_" + str_pr + "_" + str_lr + "_checkpoint_" 
+
+checkpoint_clam_name = PATH_checkpoints + "\\clam_" + str_state + "_" + str_hd + "_" + str_pr + "_" + str_lr + "_checkpoint_" 
 
 
 # %%
@@ -114,43 +132,65 @@ df = df.dropna(subset=[label])
     
 # %%
 
+def collate_fn_none(batch):
+    batch = list(filter(lambda x: x is not None, batch))
+    return torch.utils.data.dataloader.default_collate(batch)
+            
+# %%
+
 # create k-NNG with VGG patch embedddings 
+
 if creating_knng:
 
     file_ids, train_ids, test_ids = Loaders().train_test_ids(df, train_fraction, state, patient_id, label, subset)
 
     df_train, df_test, train_subset, test_subset = Loaders().df_loader(df, train_transform, test_transform, train_ids, test_ids, patient_id, label, subset=False)
 
-    train_slides, test_slides = Loaders().slides_dataloader(train_subset, test_subset, train_ids, test_ids, train_transform, test_transform, slide_batch=slide_batch, num_workers=num_workers, shuffle=True, label='Pathotype_binary', patient_id="Patient ID")
+    train_slides, test_slides = Loaders().slides_dataloader(train_subset, test_subset, train_ids, test_ids, train_transform, test_transform, slide_batch=slide_batch, num_workers=num_workers, shuffle=True, collate=collate_fn_none, label=label, patient_id=patient_id)
 
     embedding_net = VGG_embedding(embedding_vector_size=embedding_vector_size, n_classes=n_classes)
     if use_gpu:
         embedding_net.cuda()
 
-    train_graph_dict = create_graphs(embedding_net, train_slides, k=5, mode='connectivity', include_self=False)
-    test_graph_dict = create_graphs(embedding_net, test_slides, k=5, mode='connectivity', include_self=False)
-
     # save k-NNG with VGG patch embedddings for future use
-    print("Started saving train_graph_dict to file")
-    with open("train_graph_dict.pkl", "wb") as file:
-        pickle.dump(train_graph_dict, file)  # encode dict into JSON
-        print("Done writing dict into pickle file")
+    slides_dict = {('train_graph_dict_', 'train_embedding_dict_') : train_slides ,
+                   ('test_graph_dict_', 'test_embedding_dict_'): test_slides}
+    
+    for file_prefix, slides in slides_dict.items():
+
+        graph_dict, embedding_dict = create_embeddings_graphs(embedding_net, slides, k=5, mode='connectivity', include_self=False)
         
-    print("Started saving test_graph_dict to file")
-    with open("test_graph_dict.pkl", "wb") as file:
-        pickle.dump(test_graph_dict, file)  
-        print("Done writing dict into .pickle file")
+        print("Started saving %s to file" % file_prefix[0])
+        with open(file_prefix[0] + dataset_name + ".pkl", "wb") as file:
+            pickle.dump(graph_dict, file)  # encode dict into Pickle
+            print("Done writing graph dict into pickle file")
+            
+        print("Started saving %s to file" % file_prefix[1])
+        with open(file_prefix[1] + dataset_name + ".pkl", "wb") as file:
+            pickle.dump(embedding_dict, file)  # encode dict into Pickle
+            print("Done writing embedding dict into pickle file")
 
 
-if creating_knng==False:
+if not creating_knng:
 
-    with open("train_graph_dict.pkl", "rb") as train_file:
+    with open("train_graph_dict_" + dataset_name + ".pkl", "rb") as train_file:
     # Load the dictionary from the file
         train_graph_dict = pickle.load(train_file)
 
-    with open("test_graph_dict.pkl", "rb") as test_file:
+    with open("test_graph_dict_" + dataset_name + ".pkl", "rb") as test_file:
     # Load the dictionary from the file
         test_graph_dict = pickle.load(test_file)
+        
+        
+if not creating_embedding:
+
+    with open("train_embedding_dict_" + dataset_name + ".pkl", "rb") as train_file:
+    # Load the dictionary from the file
+        train_embedding_dict = pickle.load(train_file)
+
+    with open("test_embedding_dict_" + dataset_name + ".pkl", "rb") as test_file:
+    # Load the dictionary from the file
+        test_embedding_dict = pickle.load(test_file)
 
 # %%
 
@@ -160,24 +200,33 @@ if creating_knng==False:
 
 #classification_weights = PATH_output_weights + "\best" + str_hd + ".pth"
 
-graph_net = GAT_SAGPool(embedding_vector_size, heads=heads, pooling_ratio=pooling_ratio)
-loss_fn = nn.CrossEntropyLoss()
-optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
-
+if tain_graph:
+    graph_net = GAT_SAGPool(embedding_vector_size, heads=heads, pooling_ratio=pooling_ratio)
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
+    if use_gpu:
+        graph_net.cuda()
+    
 #print(state, heads, pooling_ratio, learning_rate, flush=True)
 
-if use_gpu:
-     graph_net.cuda()
-
-val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_dict, test_graph_dict, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, random_seed=str_state, heads=str_hd, pooling_ratio=str_pr, learning_rate=str_lr, checkpoint=False, checkpoints=PATH_checkpoints)
+    val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_dict, test_graph_dict, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, checkpoint=False, checkpoint_path=checkpoint_graph_name)
 
 # torch.save(graph_weights.state_dict(), classification_weights)
 
 #print(test_loss)
 #print(test_accuracy)
 
-np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_graph_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
-np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_graph_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)
+    np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_graph_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
+    np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_graph_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)
 
 #sys.stdout.close()
 
+if train_clam:
+    clam_net = GatedAttention(embedding_vector_size)
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer_ft = optim.Adam(clam_net.parameters(), lr=learning_rate)
+    if use_gpu:
+        clam_net.cuda()
+        
+        
+    val_loss_list, val_accuracy_list, val_auc_list, clam_weights = train_clam_multi_slide(clam_net, train_embedding_dict, test_embedding_dict, loss_fn, optimizer_ft, embedding_vector_size, n_classes, bag_weight=0.7, num_epochs=70, training=training, testing=testing, checkpoint=False, checkpoint_path=checkpoint_clam_name)
