@@ -6,6 +6,9 @@ Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles L
 
 --------------
 
+### I am currently updating the code and will provide a step by step explanation on how to run it. 
+
+
 <img src="model_v2.png" alt="MUSTANG pipeline">
 
 The MUSTANG pipeline is composed of:
