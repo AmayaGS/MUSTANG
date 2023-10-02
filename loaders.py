@@ -64,10 +64,10 @@ class Loaders:
         
         train_subset = df[df[patient_id].isin(train_ids)].reset_index(drop=True)
         test_subset = df[df[patient_id].isin(test_ids)].reset_index(drop=True)
-        df_train = histoDataset(train_subset, train_transform, label=label)
-        df_test = histoDataset(test_subset, test_transform, label=label)
+       # df_train = histoDataset(train_subset, train_transform, label=label)
+        #df_test = histoDataset(test_subset, test_transform, label=label)
         
-        return df_train, df_test, train_subset, test_subset
+        return train_subset, test_subset#, df_train, df_test, 
 
 
     def slides_dataloader(self, train_sub, test_sub, train_ids, test_ids, train_transform, test_transform, slide_batch, num_workers, shuffle, collate, label='Pathotype_binary', patient_id="Patient ID"):

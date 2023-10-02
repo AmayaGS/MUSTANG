@@ -59,7 +59,7 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
             print("Epoch {}/{}".format(epoch, num_epochs), flush=True)
             print('-' * 10)
 
-            for batch_idx, (patient_ID, graph_object) in enumerate(train_loader.items()):
+            for batch_idx, (patient_ID, graph_object) in enumerate(train_loader.dataset.items()):
 
                 data, label = graph_object
 
@@ -114,7 +114,7 @@ def train_graph_multi_stain(graph_net, train_loader, test_loader, loss_fn, optim
             prob = []
             labels = []
     
-            for batch_idx, (patient_ID, graph_object) in enumerate(test_loader.items()):
+            for batch_idx, (patient_ID, graph_object) in enumerate(test_loader.dataset.items()):
 
                 data, label = graph_object
                 
