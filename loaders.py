@@ -32,12 +32,12 @@ class histoDataset(Dataset):
 
         try:
             image = Image.open(self.filepaths[idx])
-            patient_id = self.patient_ID[idx]
-            filename = self.filename[idx]
-            stain = self.stain[idx]
+            #patient_id = self.patient_ID[idx]
+            #filename = self.filename[idx]
+            #stain = self.stain[idx]
             image_tensor = self.transform(image)
             image_label = self.labels[idx]
-            return image_tensor, image_label, patient_id, filename, stain
+            return image_tensor, image_label#, patient_id, filename, stain
         except FileNotFoundError:
             return None
 

@@ -7,6 +7,7 @@ Created on Thu Nov 17 11:52:02 2022
 
 import os, os.path
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+import random
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -87,10 +88,21 @@ test_transform = transforms.Compose([
 
 # %%
 
+def seed_everything(seed=42):                                                  
+    random.seed(seed)                                                            
+    np.random.seed(seed)                                                         
+    torch.manual_seed(seed)                                                      
+    torch.cuda.manual_seed_all(seed)                                             
+    os.environ['PYTHONHASHSEED'] = str(seed)                                     
+    torch.backends.cudnn.deterministic = False                                    
+    torch.backends.cudnn.benchmark = False 
+       
+# %%
+
 # parameters 
 
-state = 2
-torch.manual_seed(state)
+state = 42
+seed_everything(state)
 train_fraction = .7
 
 subset= False
@@ -149,7 +161,7 @@ if creating_knng:
 
     file_ids, train_ids, test_ids = Loaders().train_test_ids(df, train_fraction, state, patient_id, label, subset)
 
-    train_subset, test_subset = Loaders().df_loader(df, train_transform, test_transform, train_ids, test_ids, patient_id, label, subset=False)
+    train_subset, test_subset = Loaders().df_loader(df, train_transform, test_transform, train_ids, test_ids, patient_id, label, subset=subset)
 
     train_slides, test_slides = Loaders().slides_dataloader(train_subset, test_subset, train_ids, test_ids, train_transform, test_transform, slide_batch=slide_batch, num_workers=num_workers, shuffle=False, collate=collate_fn_none, label=label, patient_id=patient_id)
 
@@ -175,6 +187,9 @@ if creating_knng:
             pickle.dump(embedding_dict, file)  # encode dict into Pickle
             print("Done writing embedding dict into pickle file")
 
+# %%
+
+# load pickled embeddings and graphs
 
 if not creating_knng:
 
@@ -199,7 +214,8 @@ if not creating_embedding:
 
 # %%
 
-# weights for minority oversampling
+# calculate weights for minority oversampling
+
 count = []
 for k, v in train_graph_dict.items():
     count.append(v[1].item())
@@ -208,7 +224,7 @@ class_count = np.array(list(counter.values()))
 weight = 1 / class_count
 samples_weight = np.array([weight[t] for t in count])
 samples_weight = torch.from_numpy(samples_weight)
-sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), len(samples_weight))
+sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), num_samples=len(samples_weight),  replacement=True)
 
 # %%
 
@@ -216,7 +232,7 @@ sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('to
 
 #sys.stdout = open(PATH_output_file + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".txt", 'a')
 
-classification_weights = PATH_output_weights + "\best" + str_hd + ".pth"
+#classification_weights = PATH_output_weights + "\best" + str_hd + ".pth"
 
 train_graph_loader = torch.utils.data.DataLoader(train_graph_dict, batch_size=1, shuffle=False, num_workers=0, sampler=sampler, drop_last=False)
 test_graph_loader = torch.utils.data.DataLoader(test_graph_dict, batch_size=1, shuffle=False, num_workers=0, drop_last=False)
@@ -232,7 +248,7 @@ if tain_graph:
 
     val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_loader, test_graph_loader, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, checkpoint=False, checkpoint_path=checkpoint_graph_name)
 
-    torch.save(graph_weights.state_dict(), classification_weights)
+    #torch.save(graph_weights.state_dict(), classification_weights)
 
     np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_graph_" + dataset_name + "_" + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
     np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_graph_" + dataset_name + "_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)

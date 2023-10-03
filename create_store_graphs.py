@@ -34,7 +34,7 @@ def create_embeddings_graphs(embedding_net, loader, k=5, mode='connectivity', in
             patient_embedding = []
     
             for patch in slide_loader:
-                inputs, label, _, _, _ = patch
+                inputs, label = patch
                 label = label[0].unsqueeze(0)
                 
                 if use_gpu:

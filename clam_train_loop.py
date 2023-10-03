@@ -91,9 +91,9 @@ def train_clam_multi_slide(clam_net, train_loader, test_loader, loss_fn, optimiz
                 inst_logger.log_batch(inst_preds, inst_labels)
                 
                 train_loss += loss_value
-                if (batch_idx + 1) % 20 == 0:
-                    print('- batch {}, loss: {:.4f}, instance_loss: {:.4f}, weighted_loss: {:.4f}, '.format(batch_idx, loss_value, instance_loss_value, total_loss.item()) + 
-                        'label: {}, bag_size: {}'.format(label.item(), data.size(0)))
+                #if (batch_idx + 1) % 20 == 0:
+                #    print('- batch {}, loss: {:.4f}, instance_loss: {:.4f}, weighted_loss: {:.4f}, '.format(batch_idx, loss_value, instance_loss_value, total_loss.item()) + 
+                #        'label: {}, bag_size: {}'.format(label.item(), data.size(0)))
          
                 error = clam_net.calculate_error(Y_hat, label)
                 train_error += error
@@ -111,9 +111,9 @@ def train_clam_multi_slide(clam_net, train_loader, test_loader, loss_fn, optimiz
             if inst_count > 0:
                 train_inst_loss /= inst_count
                 print('\n')
-                for i in range(n_classes):
-                    acc, correct, count = inst_logger.get_summary(i)
-                    print('class {} clustering acc {}: correct {}/{}'.format(i, acc, correct, count))
+                #for i in range(n_classes):
+                #    acc, correct, count = inst_logger.get_summary(i)
+                #    print('class {} clustering acc {}: correct {}/{}'.format(i, acc, correct, count))
              
             print('Epoch: {}, train_loss: {:.4f}, train_clustering_loss:  {:.4f}, train_error: {:.4f}, train_accuracy: {:.4f}'.format(epoch, train_loss, train_inst_loss,  train_error, train_accuracy))
             for i in range(n_classes):
@@ -205,9 +205,9 @@ def train_clam_multi_slide(clam_net, train_loader, test_loader, loss_fn, optimiz
             print('\nVal Set, val_loss: {:.4f}, val_error: {:.4f}, AUC: {:.4f}, Accuracy: {:.4f}'.format(val_loss, val_error, val_auc, val_accuracy))
             if val_inst_count > 0:
                 val_inst_loss /= val_inst_count
-                for i in range(n_classes):
-                    acc, correct, count = val_inst_logger.get_summary(i)
-                    print('class {} clustering acc {}: correct {}/{}'.format(i, acc, correct, count))
+                #for i in range(n_classes):
+                 #   acc, correct, count = val_inst_logger.get_summary(i)
+                 #   print('class {} clustering acc {}: correct {}/{}'.format(i, acc, correct, count))
         
             #for i in range(n_classes):
             #    acc, correct, count = val_acc_logger.get_summary(i)
