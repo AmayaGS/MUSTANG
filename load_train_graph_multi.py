@@ -7,15 +7,14 @@ Created on Thu Nov 17 11:52:02 2022
 
 import os, os.path
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-import random
 import numpy as np
 import pandas as pd
-from PIL import Image
-from PIL import ImageFile
 from matplotlib import pyplot as plt
 from collections import Counter
-
 import pickle
+
+from PIL import Image
+from PIL import ImageFile
 
 import torch
 import torch.nn as nn
@@ -23,13 +22,13 @@ import torch.optim as optim
 from torchvision import transforms
 
 from loaders import Loaders
+from embedding_net import VGG_embedding
 from create_store_graphs import create_embeddings_graphs
-from graph_train_loop import train_graph_multi_stain, test_multi_stain_wsi
-from clam_train_loop import train_clam_multi_slide
+from graph_train_loop import train_graph_multi_wsi
+from auxiliary_functions import seed_everything
+from Graph_model import GAT_SAGPool
 
-from models import VGG_embedding, GAT_SAGPool, GatedAttention
-
-#from plotting_results import auc_plot, pr_plot, plot_confusion_matrix
+from plotting_results import auc_plot, pr_plot, confusion_matrix_plot, learning_curve_plot
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
@@ -40,9 +39,9 @@ device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Image.MAX_IMAGE_PIXELS = None
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-plt.ion()  
+plt.ion()
 
-import gc 
+import gc
 gc.enable()
 
 # %%
@@ -59,21 +58,20 @@ os.chdir(r"C:\Users\Amaya\Documents\PhD\MangoMIL")
 #df = pd.read_csv(PATH_patches, header=0)
 
  # %%
- 
+
 dataset_name = "RA"
-PATH_patches =  r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"  # csv with file location is foud here 
+PATH_patches =  r"C:\Users\Amaya\Documents\PhD\Data\df_all_stains_patches_labels.csv"  # csv with file location is foud here
 PATH_output_file = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\results\GRAPH_multi_seed_" # keep output results here
-PATH_output_weights = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\weights"  # keep output weights here 
-PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights" # keep checkpoints here 
+PATH_output_weights = r"C:\Users\AmayaGS\Documents\PhD\MangoMIL\weights"  # keep output weights here
+PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights" # keep checkpoints here
 
 # %%
 
-# image transforms 
-
+# image transforms
 train_transform = transforms.Compose([
         transforms.RandomChoice([
         transforms.ColorJitter(brightness=0.1),
-        transforms.ColorJitter(contrast=0.1), 
+        transforms.ColorJitter(contrast=0.1),
         transforms.ColorJitter(saturation=0.1),
         transforms.ColorJitter(hue=0.1)]),
         transforms.RandomHorizontalFlip(),
@@ -88,25 +86,14 @@ test_transform = transforms.Compose([
 
 # %%
 
-def seed_everything(seed=42):                                                  
-    random.seed(seed)                                                            
-    np.random.seed(seed)                                                         
-    torch.manual_seed(seed)                                                      
-    torch.cuda.manual_seed_all(seed)                                             
-    os.environ['PYTHONHASHSEED'] = str(seed)                                     
-    torch.backends.cudnn.deterministic = False                                    
-    torch.backends.cudnn.benchmark = False 
-       
-# %%
-
-# parameters 
+# parameters
 
 state = 42
 seed_everything(state)
 train_fraction = .7
 
 subset= False
-slide_batch = 10 # this needs to be larger than one, otherwise Dataloader can fail when only passed a None object from collate function. Should change Dataset to Iterable dataset instead to solve this problem. 
+slide_batch = 10 # this needs to be larger than one, otherwise Dataloader can fail when only passed a None object from collate function. Should change Dataset to Iterable dataset instead to solve this problem.
 
 K=5
 
@@ -117,7 +104,7 @@ creating_embedding = False
 training = True
 testing = True
 
-tain_graph = True
+train_graph = True
 train_clam = True
 
 embedding_vector_size = 1024
@@ -137,16 +124,16 @@ label = 'Pathotype_binary'
 patient_id = 'Patient ID'
 n_classes=2
 
-checkpoint_graph_name = PATH_checkpoints + "\\graph_" + dataset_name + "_" + str_state + "_" + str_hd + "_" + str_pr + "_" + str_lr + "_checkpoint_" 
+graph_parameters = PATH_checkpoints + "\\graph_" + dataset_name + "_" + str_state + "_" + str_hd + "_" + str_pr + "_" + str_lr
 
-checkpoint_clam_name = PATH_checkpoints + "\\clam_"  + dataset_name + "_" + str_state + "_" + str_hd + "_" + str_pr + "_" + str_lr + "_checkpoint_" 
+clam_parameters = PATH_checkpoints + "\\clam_"  + dataset_name + "_" + str_state + "_" + str_hd + "_" + str_pr + "_" + str_lr
 
 
 # %%
 
 df = pd.read_csv(PATH_patches, header=0)
 df = df.dropna(subset=[label])
-    
+
 # %%
 
 def collate_fn_none(batch):
@@ -155,7 +142,7 @@ def collate_fn_none(batch):
 
 # %%
 
-# create k-NNG with VGG patch embedddings 
+# create k-NNG with VGG patch embedddings
 
 if creating_knng:
 
@@ -172,16 +159,16 @@ if creating_knng:
     # save k-NNG with VGG patch embedddings for future use
     slides_dict = {('train_graph_dict_', 'train_embedding_dict_') : train_slides ,
                    ('test_graph_dict_', 'test_embedding_dict_'): test_slides}
-    
+
     for file_prefix, slides in slides_dict.items():
 
         graph_dict, embedding_dict = create_embeddings_graphs(embedding_net, slides, k=5, mode='connectivity', include_self=False)
-        
+
         print("Started saving %s to file" % file_prefix[0])
         with open(file_prefix[0] + dataset_name + ".pkl", "wb") as file:
             pickle.dump(graph_dict, file)  # encode dict into Pickle
             print("Done writing graph dict into pickle file")
-            
+
         print("Started saving %s to file" % file_prefix[1])
         with open(file_prefix[1] + dataset_name + ".pkl", "wb") as file:
             pickle.dump(embedding_dict, file)  # encode dict into Pickle
@@ -200,8 +187,8 @@ if not creating_knng:
     with open("test_graph_dict_" + dataset_name + ".pkl", "rb") as test_file:
     # Load the dictionary from the file
         test_graph_dict = pickle.load(test_file)
-        
-        
+
+
 if not creating_embedding:
 
     with open("train_embedding_dict_" + dataset_name + ".pkl", "rb") as train_file:
@@ -235,35 +222,37 @@ sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('to
 #classification_weights = PATH_output_weights + "\best" + str_hd + ".pth"
 
 train_graph_loader = torch.utils.data.DataLoader(train_graph_dict, batch_size=1, shuffle=False, num_workers=0, sampler=sampler, drop_last=False)
+#train_graph_loader = torch_geometric.loader.DataLoader(train_graph_dict, batch_size=1, shuffle=False, num_workers=0, sampler=sampler, drop_last=False, generator=seed_everything(state))
 test_graph_loader = torch.utils.data.DataLoader(test_graph_dict, batch_size=1, shuffle=False, num_workers=0, drop_last=False)
 
-if tain_graph:
+if train_graph:
     graph_net = GAT_SAGPool(embedding_vector_size, heads=heads, pooling_ratio=pooling_ratio)
     loss_fn = nn.CrossEntropyLoss()
     optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
     if use_gpu:
         graph_net.cuda()
-    
+
     #print(state, heads, pooling_ratio, learning_rate, flush=True)
 
-    val_loss, val_accuracy, val_auc, graph_weights = train_graph_multi_stain(graph_net, train_graph_loader, test_graph_loader, loss_fn, optimizer_ft, K, embedding_vector_size, n_classes, num_epochs=50, training=training, testing=testing, checkpoint=False, checkpoint_path=checkpoint_graph_name)
+    graph_weights, results_dict = train_graph_multi_wsi(graph_net, train_graph_loader, test_graph_loader, loss_fn, optimizer_ft, n_classes, num_epochs=20, training=training, testing=testing, checkpoint=False, checkpoint_path= graph_parameters + "_checkpoint_")
 
     #torch.save(graph_weights.state_dict(), classification_weights)
 
-    np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_graph_" + dataset_name + "_" + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
-    np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_graph_" + dataset_name + "_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)
+    df_results = pd.DataFrame.from_dict(results_dict)
+    df_results.to_csv(graph_parameters + ".csv", index=False)
+    learning_curve_plot(df_results)
 
     #sys.stdout.close()
 
-if train_clam:
-    clam_net = GatedAttention(embedding_vector_size)
-    loss_fn = nn.CrossEntropyLoss()
-    optimizer_ft = optim.Adam(clam_net.parameters(), lr=learning_rate)
-    if use_gpu:
-        clam_net.cuda()
-        
-        
-    val_loss_list, val_accuracy_list, val_auc_list, clam_weights = train_clam_multi_slide(clam_net, train_embedding_dict, test_embedding_dict, loss_fn, optimizer_ft, embedding_vector_size, n_classes, bag_weight=0.7, num_epochs=50, training=training, testing=testing, checkpoint=False, checkpoint_path=checkpoint_clam_name)
-    
-    np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_clam_" + dataset_name + "_" + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
-    np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_clam_" + dataset_name + "_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)
+# if train_clam:
+#     clam_net = GatedAttention(embedding_vector_size)
+#     loss_fn = nn.CrossEntropyLoss()
+#     optimizer_ft = optim.Adam(clam_net.parameters(), lr=learning_rate)
+#     if use_gpu:
+#         clam_net.cuda()
+
+
+#     val_loss_list, val_accuracy_list, val_auc_list, clam_weights = train_clam_multi_slide(clam_net, train_embedding_dict, test_embedding_dict, loss_fn, optimizer_ft, embedding_vector_size, n_classes, bag_weight=0.7, num_epochs=50, training=training, testing=testing, checkpoint=False, checkpoint_path=clam_parameters + "_checkpoint_")
+
+#     np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_clam_" + dataset_name + "_" + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
+#     np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_clam_" + dataset_name + "_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)

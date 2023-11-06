@@ -16,7 +16,7 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import auc
@@ -26,13 +26,13 @@ from sklearn.metrics import auc as calc_auc
 Image.MAX_IMAGE_PIXELS = None
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-plt.ion()  
+plt.ion()
 
 
 def auc_plot(labels, prob):
 
     # AUC
-    
+
     fpr, tpr, _ = roc_curve(labels, prob)
     plt.figure(figsize=(10,10))
     plt.plot(fpr, tpr, color='r')
@@ -45,11 +45,10 @@ def auc_plot(labels, prob):
     #plt.text(0.3, 0.0, 'Sensitivity = 0.90\nSpecificity = 0.86', fontsize = 20)
     plt.savefig('auroc.png')
 
-
 def pr_plot(labels, prob):
-    
+
     # PR
-    
+
     precision, recall, thresholds = precision_recall_curve(labels, prob)
     auc_precision_recall = auc(recall, precision)
     plt.figure(figsize=(10,10))
@@ -62,8 +61,7 @@ def pr_plot(labels, prob):
     plt.legend(loc='lower left', prop={'size': 19})
     plt.savefig('prc.png')
 
-
-def plot_confusion_matrix(cm,
+def confusion_matrix_plot(cm,
                           target_names,
                           title='Confusion matrix',
                           cmap=None,
@@ -143,4 +141,23 @@ def plot_confusion_matrix(cm,
     plt.ylabel('True label', size=20)
     plt.xlabel('Predicted label', size=20)
     plt.show()
-    
+
+
+def learning_curve_plot(df_results):
+
+    plt.rcParams.update({'font.size': 20})
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(25, 10))
+    df_results["train_accuracy"].plot(ax=axes[0], color='r')
+    df_results["val_accuracy"].plot(ax=axes[0], color='b')
+    axes[0].set_xticks(range(0,len(df_results["train_accuracy"])))
+    axes[0].set_xlabel("Epochs")
+    axes[0].set_ylabel("Accuracy")
+    df_results["train_loss"].plot(ax=axes[1], color='orange')
+    df_results["val_loss"].plot(ax=axes[1], color='green')
+    axes[1].set_xticks(range(0,len(df_results["train_loss"])))
+    axes[1].set_xlabel("Epochs")
+    axes[1].set_ylabel("Loss")
+    axes[0].legend(loc='best')
+    axes[1].legend(loc='best')
+    plt.show()
+    fig.savefig("learning_curve.png", bbox_inches='tight')

@@ -11,3 +11,9 @@ desktop.ini
 *.pth
 klipartz.com.png
 pngegg.png
+*.rdata
+*.R
+asus/gene_expression_loading.py
+*.RDS
+learning_curve.png
+test.png
