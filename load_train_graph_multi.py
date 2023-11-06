@@ -44,19 +44,6 @@ plt.ion()
 import gc
 gc.enable()
 
-# %%
-
-# set working directory
-os.chdir(r"C:\Users\Amaya\Documents\PhD\MangoMIL")
-
-# %%
-
-# dataset_name = "Sjogren"
-# PATH_patches = r"C:\Users\Amaya\Documents\PhD\NECCESITY\Slides\qj_patch_labels.csv"
-#PATH_checkpoints = r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights"
-#file = r"C:/Users/Amaya/Documents/PhD/Data/" + stain + "/df_all_"+ stain + "_patches_labels.csv"
-#df = pd.read_csv(PATH_patches, header=0)
-
  # %%
 
 dataset_name = "RA"
@@ -243,16 +230,3 @@ if train_graph:
     learning_curve_plot(df_results)
 
     #sys.stdout.close()
-
-# if train_clam:
-#     clam_net = GatedAttention(embedding_vector_size)
-#     loss_fn = nn.CrossEntropyLoss()
-#     optimizer_ft = optim.Adam(clam_net.parameters(), lr=learning_rate)
-#     if use_gpu:
-#         clam_net.cuda()
-
-
-#     val_loss_list, val_accuracy_list, val_auc_list, clam_weights = train_clam_multi_slide(clam_net, train_embedding_dict, test_embedding_dict, loss_fn, optimizer_ft, embedding_vector_size, n_classes, bag_weight=0.7, num_epochs=50, training=training, testing=testing, checkpoint=False, checkpoint_path=clam_parameters + "_checkpoint_")
-
-#     np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_loss_clam_" + dataset_name + "_" + str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_loss)
-#     np.savetxt(r"C:\Users\Amaya\Documents\PhD\MangoMIL\weights\training results\test_accuracy_clam_" + dataset_name + "_" +  str_state + "_heads_" + str_hd + "_" + str_pr + "_" + str_lr + ".csv", val_accuracy)
