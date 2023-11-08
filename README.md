@@ -6,6 +6,32 @@ Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles L
 
 --------------
 
+This code implements a graph neural network pipeline for whole slide image (WSI) classification using multi-stain embeddings and self-attention graph pooling.
+
+## Usage
+
+The main entry point is `main.py`. This handles loading the dataset, creating graphs, training and evaluation. 
+
+These are the main command-line arguments:
+
+```
+--dataset_name: Name of the dataset.
+--PATH_patches: Path to the CSV file with patch file locations.
+--embedding_vector_size: Size of the embedding vector.
+--learning_rate: Learning rate for training.
+--pooling_ratio: Pooling ratio used in the model.
+--heads: Number of GAT (Graph Attention Network) heads.
+--K: Number of nearest neighbors in the k-Nearest Neighbor Graph (k-NNG) created from WSI embeddings.
+--train_fraction: Fraction of data used for training.
+--num_epochs: Number of training epochs.
+--n_classes: Number of classes for classification.
+```
+Here's an example of how to use the code:
+
+```bash
+python main.py --dataset_name RA --PATH_patches df_labels.csv --embedding_vector_size 1024 --learning_rate 0.0001 --pooling_ratio 0.7 --heads 2 --K 5 --train_fraction 0.7 --num_epochs 30 --n_classes 2
+```
+
 ### I am currently updating the code and will provide a step by step explanation on how to run it. 
 
 
