@@ -27,10 +27,10 @@ from torchvision import transforms
 from loaders import Loaders
 from embedding_net import VGG_embedding
 from create_store_graphs import create_embeddings_graphs
-from graph_train_loop import train_graph_multi_wsi
+from graph_train_loop import train_graph_multi_wsi, test_graph_multi_wsi
 from auxiliary_functions import seed_everything
 from Graph_model import GAT_SAGPool
-from plotting_results import auc_plot, pr_plot, confusion_matrix_plot, learning_curve_plot
+from plotting_results import plot_train_results, plot_test_results
 
 
 def main():
@@ -47,7 +47,7 @@ def main():
     parser.add_argument("--K", type=int, default=5, help="Number of nearest neighbours in k-NNG created from WSI embeddings")
     parser.add_argument("--train_fraction", type=float, default=0.7, help="Train fraction")
     #parser.add_argument("--slide_batch", type=int, default=10, help="Slide batch size")
-    parser.add_argument("--num_epochs", type=int, default=1, help="Number of training epochs")
+    parser.add_argument("--num_epochs", type=int, default=30, help="Number of training epochs")
     parser.add_argument("--n_classes", type=int, default=2, help="Number of classes")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for data loading")
@@ -106,6 +106,9 @@ def main():
     heads = args.heads
     num_epochs = args.num_epochs
 
+    TRAIN = True
+    TEST = True
+
     label = 'label'
     patient_id = 'Patient ID'
     dataset_name = args.dataset_name
@@ -113,8 +116,11 @@ def main():
 
     checkpoint = args.checkpoint
     current_directory = Path(__file__).resolve().parent
-    results = os.path.join(current_directory, f"results/graph_{dataset_name}_{seed}_{heads}_{pooling_ratio}_{learning_rate}")
+    run_results_folder = f"graph_{dataset_name}_{seed}_{heads}_{pooling_ratio}_{learning_rate}"
+    results = os.path.join(current_directory, "results/" + run_results_folder)
+    checkpoints = results + "/checkpoints"
     os.makedirs(results, exist_ok = True)
+    os.makedirs(checkpoints, exist_ok = True)
 
    # Load the dataset
     df = pd.read_csv(args.PATH_patches, header=0)
@@ -180,20 +186,27 @@ def main():
     #train_graph_loader = torch_geometric.loader.DataLoader(train_graph_dict, batch_size=1, shuffle=False, num_workers=0, sampler=sampler, drop_last=False, generator=seed_everything(state)) #TODO MINIBATCHING
     test_graph_loader = torch.utils.data.DataLoader(test_graph_dict, batch_size=batch_size, shuffle=False, num_workers=num_workers, drop_last=False)
 
-    if train_graph:
-        graph_net = GAT_SAGPool(embedding_vector_size, heads=heads, pooling_ratio=pooling_ratio)
-        loss_fn = nn.CrossEntropyLoss()
-        optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
-        if use_gpu:
-            graph_net.cuda()
+    graph_net = GAT_SAGPool(embedding_vector_size, heads=heads, pooling_ratio=pooling_ratio)
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer_ft = optim.Adam(graph_net.parameters(), lr=learning_rate)
+    if use_gpu:
+        graph_net.cuda()
 
-        graph_weights, results_dict = train_graph_multi_wsi(graph_net, train_graph_loader, test_graph_loader, loss_fn, optimizer_ft, n_classes, num_epochs=num_epochs, checkpoint=checkpoint, checkpoint_path= results + "/checkpoint_")
+    if TRAIN:
+        graph_weights, results_dict = train_graph_multi_wsi(graph_net, train_graph_loader, test_graph_loader, loss_fn, optimizer_ft, n_classes=n_classes, num_epochs=num_epochs, checkpoint=checkpoint, checkpoint_path= checkpoints + "/checkpoint_")
 
-        torch.save(graph_weights.state_dict(), results + ".pth")
+        torch.save(graph_weights.state_dict(), results + "\\" + run_results_folder + ".pth")
 
         df_results = pd.DataFrame.from_dict(results_dict)
-        df_results.to_csv(results + ".csv", index=False)
-        learning_curve_plot(df_results)
+        df_results.to_csv(results + "\\" + run_results_folder + ".csv", index=False)
+        plot = plot_train_results(df_results, save= results + "\\")
+        plot.plot()
+
+    if TEST:
+        graph_net.load_state_dict(torch.load(results + "\\" + run_results_folder + ".pth"), strict=True)
+        labels, prob, conf_matrix, sensitivity, specificity = test_graph_multi_wsi(graph_net, test_graph_loader, loss_fn, n_classes=n_classes)
+        plot = plot_test_results(labels, prob, conf_matrix, target_names=["Fibroid", "M/Lymphoid"], save= results + "\\")
+        plot.plot()
 
 # %%
 

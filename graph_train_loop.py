@@ -93,7 +93,7 @@ def train_graph_multi_wsi(graph_net, train_loader, test_loader, loss_fn, optimiz
             print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count), flush=True)
 
         ################################
-        # TEST
+        # TEST/EVAL
         graph_net.eval()
 
         val_acc_logger = Accuracy_Logger(n_classes)
@@ -196,7 +196,7 @@ def train_graph_multi_wsi(graph_net, train_loader, test_loader, loss_fn, optimiz
 
 # TEST
 
-def test_graph_multi_wsi(embedding_net, graph_net, test_loader, loss_fn, n_classes=2):
+def test_graph_multi_wsi(graph_net, test_loader, loss_fn, n_classes=2):
 
     since = time.time()
 
@@ -281,4 +281,4 @@ def test_graph_multi_wsi(embedding_net, graph_net, test_loader, loss_fn, n_class
     print()
     print("Testing completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
 
-    return test_loss_list, test_accuracy_list, test_auc_list, labels, prob, conf_matrix, sensitivity, specificity
+    return labels, prob, conf_matrix, sensitivity, specificity
