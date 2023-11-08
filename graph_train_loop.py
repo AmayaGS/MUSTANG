@@ -49,6 +49,7 @@ def train_graph_multi_wsi(graph_net, train_loader, test_loader, loss_fn, optimiz
         ##################################
         # TRAIN
         acc_logger = Accuracy_Logger(n_classes=n_classes)
+        train_loss = 0
         train_acc = 0
         train_count = 0
         graph_net.train()
@@ -68,19 +69,20 @@ def train_graph_multi_wsi(graph_net, train_loader, test_loader, loss_fn, optimiz
             logits, Y_prob = graph_net(data)
             Y_hat = Y_prob.argmax(dim=1)
             acc_logger.log(Y_hat, label)
-            train_loss = loss_fn(logits, label)
+            loss = loss_fn(logits, label)
+            train_loss += loss.item()
 
             train_acc += torch.sum(Y_hat == label.data)
             train_count += 1
 
-            train_loss.backward()
+            loss.backward()
             optimizer.step()
             optimizer.zero_grad()
 
             del data, logits, Y_prob, Y_hat
             gc.collect()
 
-        total_loss = train_loss.item() / train_count
+        total_loss = train_loss / train_count
         train_accuracy =  train_acc / train_count
 
         train_loss_list.append(total_loss)

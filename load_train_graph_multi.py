@@ -92,14 +92,14 @@ def main():
     seed = args.seed
     seed_everything(seed)
     train_fraction = args.train_fraction
-    subset= False
-    slide_batch = 10 # this needs to be larger than one, otherwise Dataloader can fail when only passed a None object from collate function. TODO. change Dataset to Iterable dataset to solve this problem.
+    subset= False # TODO
+    slide_batch = 10 # TODO. change Dataset to Iterable dataset to solve this problem. this needs to be larger than one, otherwise Dataloader can fail when only passed a None object from collate function.
     K= args.K
     num_workers = args.num_workers
     batch_size = args.graph_batch_size
-    creating_knng = False
-    creating_embedding = False
-    train_graph = True
+    creating_knng = False  # TODO
+    creating_embedding = False  # TODO
+    train_graph = True  # TODO
     embedding_vector_size = args.embedding_vector_size
     learning_rate = args.learning_rate
     pooling_ratio = args.pooling_ratio
@@ -155,10 +155,10 @@ def main():
 
     # load pickled embeddings and graphs
     if not creating_knng:
-        with open(f"train_graph_dict_{dataset_name}.pkl", "rb") as train_file:
+        with open(f"train_graph_dict_{dataset_name}_v1.pkl", "rb") as train_file:
         # Load the dictionary from the file
             train_graph_dict = pickle.load(train_file)
-        with open(f"test_graph_dict_{dataset_name}.pkl", "rb") as test_file:
+        with open(f"test_graph_dict_{dataset_name}_v1.pkl", "rb") as test_file:
         # Load the dictionary from the file
             test_graph_dict = pickle.load(test_file)
 
