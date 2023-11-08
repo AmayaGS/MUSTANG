@@ -6,6 +6,8 @@ Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles L
 
 --------------
 
+### I am currently updating the code and the explanation on how to run it. 
+
 This code implements a graph neural network pipeline for whole slide image (WSI) classification using multi-stain embeddings and self-attention graph pooling.
 
 ## Usage
@@ -50,8 +52,6 @@ The trained model is saved to results/trained_model.pth.
 ### Evaluation
 
 To evaluate a trained model on new test data, set `TRAIN=False`, `TEST=True` in `main.py`. This will run the model on the test set and print out evaluation metrics.
-
-### I am currently updating the code and will provide a step by step explanation on how to run it. 
 
 <img src="model_v2.png" alt="MUSTANG pipeline">
 
