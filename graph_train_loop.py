@@ -170,13 +170,13 @@ def train_graph_multi_wsi(graph_net, train_loader, test_loader, loss_fn, optimiz
             print('Specificity: ', specificity)
 
         if val_accuracy >= best_acc:
-            if val_auc >= best_AUC:
-                best_acc = val_accuracy
-                best_AUC = val_auc
+            # if val_auc >= best_AUC:
+            best_acc = val_accuracy
+            #     best_AUC = val_auc
 
-                if checkpoint:
-                    checkpoint_weights = checkpoint_path + str(epoch) + ".pth"
-                    torch.save(graph_net.state_dict(), checkpoint_weights)
+            if checkpoint:
+                checkpoint_weights = checkpoint_path + str(epoch) + ".pth"
+                torch.save(graph_net.state_dict(), checkpoint_weights)
 
     elapsed_time = time.time() - since
 
