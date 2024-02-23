@@ -65,6 +65,8 @@ The MUSTANG pipeline is composed of:
 
 --------------
 
+If this code or article were useful to you, please consider citing:
+
 ````
 @article{gallagher2023multi,
   title={Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images},
