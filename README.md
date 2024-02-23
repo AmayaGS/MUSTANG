@@ -1,18 +1,11 @@
 # Multi Stain Graph Attention Multiple Instance Learning - MUSTANG
 
---------------
-
-Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles Lewis, Michael Barnes, Gregory Slabaugh "Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images", _British Machine Vision Conference_, Aberdeen. 2023. https://doi.org/10.48550/arXiv.2309.10650.
-
---------------
-
-### I am currently updating the code and the explanation on how to run it. 
-
 This code implements a graph neural network pipeline for whole slide image (WSI) classification using multi-stain embeddings and self-attention graph pooling.
 
 ## Usage
 
 The main entry point is `main.py`. This handles loading the dataset, creating graphs, training and evaluation. 
+### I am currently updating the code and the explanation on how to run it. 
 
 These are the main command-line arguments:
 
@@ -68,3 +61,19 @@ The MUSTANG pipeline is composed of:
 • <b>E - Graph classification</b>: The k-NNG is successively passed through four Graph Attention Network layers (GAT) and SAGPooling layers. The SAGPooling readouts from each layer are concatenated and passed through three MLP layers and finally classified.
 
 • <b>F - Prediction</b>: A pathotype or diagnosis prediction is obtained at the patient-level.
+
+
+--------------
+
+````
+@article{gallagher2023multi,
+  title={Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images},
+  author={Gallagher-Syed, Amaya and Rossi, Luca and Rivellese, Felice and Pitzalis, Costantino and Lewis, Myles and Barnes, Michael and Slabaugh, Gregory},
+  journal={arXiv preprint arXiv:2309.10650},
+  year={2023}
+}
+````
+
+Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles Lewis, Michael Barnes, Gregory Slabaugh "Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images", _British Machine Vision Conference_, Aberdeen. 2023. https://doi.org/10.48550/arXiv.2309.10650.
+
+--------------
