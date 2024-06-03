@@ -68,14 +68,16 @@ The MUSTANG pipeline is composed of:
 If this code or article were useful to you, please consider citing:
 
 ````
-@article{gallagher2023multi,
-  title={Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images},
-  author={Gallagher-Syed, Amaya and Rossi, Luca and Rivellese, Felice and Pitzalis, Costantino and Lewis, Myles and Barnes, Michael and Slabaugh, Gregory},
-  journal={arXiv preprint arXiv:2309.10650},
-  year={2023}
+@inproceedings{Gallagher-Syed_2023_BMVC,
+author    = {Amaya Gallagher-Syed and Luca Rossi and Felice Rivellese and Costantino Pitzalis and Myles Lewis and Michael Barnes and Gregory Slabaugh},
+title     = {Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images},
+booktitle = {34th British Machine Vision Conference 2023, {BMVC} 2023, Aberdeen, UK, November 20-24, 2023},
+publisher = {BMVA},
+year      = {2023},
+url       = {https://papers.bmvc2023.org/0789.pdf}
 }
 ````
 
-Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles Lewis, Michael Barnes, Gregory Slabaugh "Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images", _British Machine Vision Conference_, Aberdeen. 2023. https://doi.org/10.48550/arXiv.2309.10650.
+Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles Lewis, Michael Barnes, Gregory Slabaugh "Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images", _British Machine Vision Conference_, Aberdeen. 2023. [https://doi.org/10.48550/arXiv.2309.10650](https://bmvc2022.mpi-inf.mpg.de/BMVC2023/0789.pdf).
 
 --------------
