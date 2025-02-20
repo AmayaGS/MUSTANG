@@ -2,6 +2,8 @@
 
 This code implements a graph neural network pipeline for whole slide image (WSI) classification using multi-stain embeddings and self-attention graph pooling.
 
+Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles Lewis, Michael Barnes, Gregory Slabaugh "Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images", _British Machine Vision Conference_, Aberdeen. 2023. [https://doi.org/10.48550/arXiv.2309.10650](https://bmvc2022.mpi-inf.mpg.de/BMVC2023/0789.pdf).
+
 ## Usage
 
 The main entry point is `main.py`. This handles loading the dataset, creating graphs, training and evaluation. 
@@ -76,7 +78,5 @@ year      = {2023},
 url       = {https://papers.bmvc2023.org/0789.pdf}
 }
 ````
-
-Amaya Gallagher-Syed, Luca Rossi, Felice Rivellese, Costantino Pitzalis, Myles Lewis, Michael Barnes, Gregory Slabaugh "Multi-Stain Self-Attention Graph Multiple Instance Learning Pipeline for Histopathology Whole Slide Images", _British Machine Vision Conference_, Aberdeen. 2023. [https://doi.org/10.48550/arXiv.2309.10650](https://bmvc2022.mpi-inf.mpg.de/BMVC2023/0789.pdf).
 
 --------------
