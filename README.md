@@ -5,7 +5,6 @@ This code implements a graph neural network pipeline for whole slide image (WSI)
 ## Usage
 
 The main entry point is `main.py`. This handles loading the dataset, creating graphs, training and evaluation. 
-### I am currently updating the code and the explanation on how to run it. 
 
 These are the main command-line arguments:
 
